@@ -7,7 +7,6 @@ interface UserInfo {
   id: string
   displayName: string
   avatarUrl: string | null
-  status: string
 }
 
 interface MessageState {
@@ -76,13 +75,11 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     const tempMessage: Message = {
       id: tempId,
       content,
-      channelId,
       parentId: parentId || null,
       user: {
         id: user.id,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
-        status: user.status,
       },
       files: [],
       reactions: [],

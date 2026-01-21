@@ -87,7 +87,6 @@ export default function ChannelPage() {
         id: user.id,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl || null,
-        status: user.status,
       })
     }
   }
