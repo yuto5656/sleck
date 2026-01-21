@@ -31,7 +31,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
   const [mentionIndex, setMentionIndex] = useState(0)
   const [isSending, setIsSending] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // Filter members based on mention search

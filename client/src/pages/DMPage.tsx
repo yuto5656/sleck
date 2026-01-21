@@ -60,16 +60,6 @@ export default function DMPage() {
     }
   }
 
-  const handleLoadMore = () => {
-    if (dmId) {
-      const dmMessages = messages.get(dmId) || []
-      const oldestMessage = dmMessages[0]
-      if (oldestMessage) {
-        loadMessages(dmId, oldestMessage.id)
-      }
-    }
-  }
-
   const dmMessages = dmId ? messages.get(dmId) || [] : []
   const dmHasMore = dmId ? hasMore.get(dmId) || false : false
 

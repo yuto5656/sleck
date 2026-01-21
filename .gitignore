@@ -41,3 +41,4 @@ server/uploads/*
 # Misc
 *.tgz
 .cache/
+.vercel

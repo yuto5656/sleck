@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { MoreHorizontal, Smile, MessageSquare, Edit2, Trash2 } from 'lucide-react'
+import { Smile, MessageSquare, Edit2, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 import ReactMarkdown from 'react-markdown'
 import { Message } from '../types'

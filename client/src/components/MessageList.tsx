@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { format, isToday, isYesterday } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import clsx from 'clsx'
 import { Message } from '../types'
 import { useAuthStore } from '../stores/authStore'
 import MessageItem from './MessageItem'
