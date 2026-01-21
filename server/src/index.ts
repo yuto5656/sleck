@@ -19,11 +19,22 @@ import { errorHandler } from './middleware/errorHandler'
 
 dotenv.config()
 
+// Parse allowed origins from CLIENT_URL (comma-separated for multiple origins)
+const getAllowedOrigins = (): string | string[] => {
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
+  if (clientUrl.includes(',')) {
+    return clientUrl.split(',').map(url => url.trim())
+  }
+  return clientUrl
+}
+
+const allowedOrigins = getAllowedOrigins()
+
 const app = express()
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -33,7 +44,7 @@ export const prisma = new PrismaClient()
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
 }))
 app.use(express.json())
