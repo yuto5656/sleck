@@ -12,9 +12,12 @@ export default function Layout() {
   const { loadDMs } = useDMStore()
 
   useEffect(() => {
-    loadUser()
-    loadWorkspaces()
-    loadDMs()
+    // Load all data in parallel for faster startup
+    Promise.all([
+      loadUser(),
+      loadWorkspaces(),
+      loadDMs(),
+    ])
   }, [loadUser, loadWorkspaces, loadDMs])
 
   return (

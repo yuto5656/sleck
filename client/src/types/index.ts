@@ -32,6 +32,7 @@ export interface Channel {
 export interface Message {
   id: string
   content: string
+  channelId?: string
   user: {
     id: string
     displayName: string

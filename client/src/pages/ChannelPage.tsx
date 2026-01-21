@@ -57,7 +57,10 @@ export default function ChannelPage() {
     if (!channelId) return
 
     const cleanupNewMessage = socketService.onNewMessage((message) => {
-      addMessage(channelId, message)
+      // Only add message if it belongs to this channel
+      if (message.channelId === channelId) {
+        addMessage(channelId, message)
+      }
     })
 
     const cleanupTypingStart = socketService.onTypingStart((data) => {

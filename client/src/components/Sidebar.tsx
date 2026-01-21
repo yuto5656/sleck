@@ -6,6 +6,7 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useDMStore } from '../stores/dmStore'
 import CreateChannelModal from './CreateChannelModal'
 import InviteModal from './InviteModal'
+import NewDMModal from './NewDMModal'
 
 export default function Sidebar() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function Sidebar() {
   const [dmsExpanded, setDmsExpanded] = useState(true)
   const [showCreateChannel, setShowCreateChannel] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
+  const [showNewDM, setShowNewDM] = useState(false)
 
   const handleChannelClick = (channel: typeof channels[0]) => {
     setCurrentChannel(channel)
@@ -154,6 +156,15 @@ export default function Sidebar() {
                   <span>ダイレクトメッセージはありません</span>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={() => setShowNewDM(true)}
+                className="flex items-center gap-2 w-full px-2 py-1 rounded text-sm text-left text-sidebar-text-muted hover:bg-sidebar-hover hover:text-sidebar-text"
+              >
+                <Plus className="w-4 h-4" />
+                <span>新しいメッセージ</span>
+              </button>
             </div>
           )}
         </div>
@@ -165,6 +176,10 @@ export default function Sidebar() {
 
       {showInvite && (
         <InviteModal onClose={() => setShowInvite(false)} />
+      )}
+
+      {showNewDM && (
+        <NewDMModal onClose={() => setShowNewDM(false)} />
       )}
     </aside>
   )

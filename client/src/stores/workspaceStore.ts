@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { Workspace, Channel, WorkspaceMember } from '../types'
-import { workspaceApi, channelApi } from '../services/api'
+import { workspaceApi, channelApi, messageApi } from '../services/api'
+import { socketService } from '../services/socket'
 
 interface WorkspaceState {
   workspaces: Workspace[]
@@ -96,9 +97,26 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       const response = await workspaceApi.getChannels(workspaceId)
       set({ channels: response.data.channels })
 
-      // Set first channel as current if none selected
+      // Set first channel as current if none selected and preload its messages
       if (!get().currentChannel && response.data.channels.length > 0) {
-        set({ currentChannel: response.data.channels[0] })
+        const firstChannel = response.data.channels[0]
+        set({ currentChannel: firstChannel })
+
+        // Preload messages for the first channel for faster initial display
+        try {
+          const messagesResponse = await messageApi.getMessages(firstChannel.id, { limit: 50 })
+          // Import messageStore lazily to avoid circular dependencies
+          const { useMessageStore } = await import('./messageStore')
+          const messageState = useMessageStore.getState()
+          const messages = new Map(messageState.messages)
+          messages.set(firstChannel.id, messagesResponse.data.messages)
+          const hasMore = new Map(messageState.hasMore)
+          hasMore.set(firstChannel.id, messagesResponse.data.hasMore)
+          useMessageStore.setState({ messages, hasMore })
+          socketService.joinChannel(firstChannel.id)
+        } catch {
+          // Ignore preload errors - messages will load when navigating
+        }
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: { message?: string } } } }
