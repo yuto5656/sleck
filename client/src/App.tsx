@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import InvitePage from './pages/InvitePage'
 import WorkspacePage from './pages/WorkspacePage'
 import ChannelPage from './pages/ChannelPage'
 import DMPage from './pages/DMPage'
@@ -54,6 +55,7 @@ export default function App() {
           </PublicRoute>
         }
       />
+      <Route path="/invite/:token" element={<InvitePage />} />
       <Route
         path="/"
         element={

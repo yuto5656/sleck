@@ -94,6 +94,12 @@ export const workspaceApi = {
   getMembers: (workspaceId: string, params?: { search?: string; limit?: number; offset?: number }) =>
     api.get(`/workspaces/${workspaceId}/members`, { params }),
   getChannels: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/channels`),
+  createInvite: (workspaceId: string) =>
+    api.post(`/workspaces/${workspaceId}/invites`),
+  getInviteInfo: (token: string) =>
+    api.get(`/workspaces/invites/${token}`),
+  acceptInvite: (token: string) =>
+    api.post(`/workspaces/invites/${token}/accept`),
 }
 
 // Channel API

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Hash, Lock, Plus, ChevronDown, ChevronRight, MessageSquare } from 'lucide-react'
+import { Hash, Lock, Plus, ChevronDown, ChevronRight, MessageSquare, UserPlus } from 'lucide-react'
 import clsx from 'clsx'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useDMStore } from '../stores/dmStore'
 import CreateChannelModal from './CreateChannelModal'
+import InviteModal from './InviteModal'
 
 export default function Sidebar() {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ export default function Sidebar() {
   const [channelsExpanded, setChannelsExpanded] = useState(true)
   const [dmsExpanded, setDmsExpanded] = useState(true)
   const [showCreateChannel, setShowCreateChannel] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
 
   const handleChannelClick = (channel: typeof channels[0]) => {
     setCurrentChannel(channel)
@@ -90,6 +92,18 @@ export default function Sidebar() {
           )}
         </div>
 
+        {/* Invite Section */}
+        <div className="px-3 py-2">
+          <button
+            type="button"
+            onClick={() => setShowInvite(true)}
+            className="flex items-center gap-2 w-full px-2 py-1 rounded text-sm text-left text-sidebar-text-muted hover:bg-sidebar-hover hover:text-sidebar-text"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>メンバーを招待</span>
+          </button>
+        </div>
+
         {/* DMs Section */}
         <div className="px-3 py-2">
           <button
@@ -147,6 +161,10 @@ export default function Sidebar() {
 
       {showCreateChannel && (
         <CreateChannelModal onClose={() => setShowCreateChannel(false)} />
+      )}
+
+      {showInvite && (
+        <InviteModal onClose={() => setShowInvite(false)} />
       )}
     </aside>
   )

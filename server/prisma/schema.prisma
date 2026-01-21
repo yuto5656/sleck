@@ -51,6 +51,7 @@ model User {
   dm2                 DirectMessage[]      @relation("DMParticipant2")
   dmMessages          DMMessage[]
   passwordResetTokens PasswordResetToken[]
+  workspaceInvites    WorkspaceInvite[]
 }
 
 model Workspace {
@@ -65,6 +66,7 @@ model Workspace {
   // Relations
   members  WorkspaceMember[]
   channels Channel[]
+  invites  WorkspaceInvite[]
 }
 
 model WorkspaceMember {
@@ -226,4 +228,21 @@ model PasswordResetToken {
 
   @@index([token])
   @@index([userId])
+}
+
+model WorkspaceInvite {
+  id          String    @id @default(uuid())
+  workspaceId String
+  token       String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([workspaceId])
 }

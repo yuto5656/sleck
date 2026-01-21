@@ -1,10 +1,16 @@
 import { Router, Response, NextFunction } from 'express'
 import { body, query, validationResult } from 'express-validator'
+import crypto from 'crypto'
 import { prisma } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
 
 const router = Router()
+
+// Generate a secure random token for invites
+const generateInviteToken = () => {
+  return crypto.randomBytes(16).toString('hex')
+}
 
 // Get workspaces for current user
 router.get('/', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -362,5 +368,162 @@ router.get('/:workspaceId/channels', authenticate, async (req: AuthRequest, res:
     next(error)
   }
 })
+
+// Create invite link for workspace
+router.post(
+  '/:workspaceId/invites',
+  authenticate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const membership = await prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: {
+            userId: req.userId!,
+            workspaceId: req.params.workspaceId,
+          },
+        },
+      })
+
+      if (!membership || !['owner', 'admin'].includes(membership.role)) {
+        throw new AppError('Permission denied', 403, 'FORBIDDEN')
+      }
+
+      const token = generateInviteToken()
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+
+      const invite = await prisma.workspaceInvite.create({
+        data: {
+          workspaceId: req.params.workspaceId,
+          token,
+          expiresAt,
+          createdById: req.userId!,
+        },
+        include: {
+          workspace: {
+            select: { name: true },
+          },
+        },
+      })
+
+      const inviteUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/invite/${token}`
+
+      res.status(201).json({
+        id: invite.id,
+        token: invite.token,
+        inviteUrl,
+        expiresAt: invite.expiresAt,
+        workspaceName: invite.workspace.name,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get invite info (public - no auth required)
+router.get('/invites/:token', async (req, res: Response, next: NextFunction) => {
+  try {
+    const invite = await prisma.workspaceInvite.findUnique({
+      where: { token: req.params.token },
+      include: {
+        workspace: {
+          select: { id: true, name: true, description: true },
+        },
+      },
+    })
+
+    if (!invite) {
+      throw new AppError('Invalid invite link', 404, 'NOT_FOUND')
+    }
+
+    if (invite.usedAt) {
+      throw new AppError('This invite link has already been used', 400, 'INVITE_USED')
+    }
+
+    if (invite.expiresAt < new Date()) {
+      throw new AppError('This invite link has expired', 400, 'INVITE_EXPIRED')
+    }
+
+    res.json({
+      workspace: invite.workspace,
+      expiresAt: invite.expiresAt,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// Accept invite and join workspace
+router.post(
+  '/invites/:token/accept',
+  authenticate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const invite = await prisma.workspaceInvite.findUnique({
+        where: { token: req.params.token },
+        include: {
+          workspace: true,
+        },
+      })
+
+      if (!invite) {
+        throw new AppError('Invalid invite link', 404, 'NOT_FOUND')
+      }
+
+      if (invite.expiresAt < new Date()) {
+        throw new AppError('This invite link has expired', 400, 'INVITE_EXPIRED')
+      }
+
+      // Check if user is already a member
+      const existingMembership = await prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: {
+            userId: req.userId!,
+            workspaceId: invite.workspaceId,
+          },
+        },
+      })
+
+      if (existingMembership) {
+        throw new AppError('You are already a member of this workspace', 400, 'ALREADY_MEMBER')
+      }
+
+      // Add user to workspace and general channel
+      const generalChannel = await prisma.channel.findFirst({
+        where: {
+          workspaceId: invite.workspaceId,
+          name: 'general',
+        },
+      })
+
+      await prisma.$transaction([
+        prisma.workspaceMember.create({
+          data: {
+            userId: req.userId!,
+            workspaceId: invite.workspaceId,
+            role: 'member',
+          },
+        }),
+        ...(generalChannel
+          ? [
+              prisma.channelMember.create({
+                data: {
+                  userId: req.userId!,
+                  channelId: generalChannel.id,
+                },
+              }),
+            ]
+          : []),
+      ])
+
+      res.json({
+        message: 'Successfully joined workspace',
+        workspace: invite.workspace,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
 
 export default router
