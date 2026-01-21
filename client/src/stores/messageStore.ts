@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Message } from '../types'
 import { messageApi } from '../services/api'
 import { socketService } from '../services/socket'
+import { messageCache } from '../services/messageCache'
 
 interface UserInfo {
   id: string
@@ -40,6 +41,21 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   pendingMessageIds: new Set(),
 
   loadMessages: async (channelId, before) => {
+    // If loading initial messages (no before cursor), try cache first
+    if (!before) {
+      const cached = await messageCache.getChannelMessages(channelId)
+      if (cached) {
+        // Show cached messages immediately
+        const messages = new Map(get().messages)
+        messages.set(channelId, cached.messages)
+        const hasMore = new Map(get().hasMore)
+        hasMore.set(channelId, cached.hasMore)
+        set({ messages, hasMore })
+        // Join socket room immediately
+        socketService.joinChannel(channelId)
+      }
+    }
+
     set({ isLoading: true, error: null })
     try {
       const response = await messageApi.getMessages(channelId, {
@@ -57,6 +73,11 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       hasMore.set(channelId, response.data.hasMore)
 
       set({ messages, hasMore, isLoading: false })
+
+      // Cache initial messages for faster re-login
+      if (!before) {
+        messageCache.setChannelMessages(channelId, newMessages, response.data.hasMore)
+      }
 
       // Join socket room
       socketService.joinChannel(channelId)

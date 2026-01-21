@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { DirectMessage, DMMessage } from '../types'
 import { dmApi } from '../services/api'
 import { socketService } from '../services/socket'
+import { messageCache } from '../services/messageCache'
 
 interface DMState {
   dms: DirectMessage[]
@@ -76,6 +77,19 @@ export const useDMStore = create<DMState>((set, get) => ({
   },
 
   loadMessages: async (dmId, before) => {
+    // If loading initial messages (no before cursor), try cache first
+    if (!before) {
+      const cached = await messageCache.getDMMessages(dmId)
+      if (cached) {
+        // Show cached messages immediately
+        const messages = new Map(get().messages)
+        messages.set(dmId, cached.messages)
+        const hasMore = new Map(get().hasMore)
+        hasMore.set(dmId, cached.hasMore)
+        set({ messages, hasMore })
+      }
+    }
+
     set({ isLoading: true, error: null })
     try {
       const response = await dmApi.getMessages(dmId, { limit: 50, before })
@@ -90,6 +104,11 @@ export const useDMStore = create<DMState>((set, get) => ({
       hasMore.set(dmId, response.data.hasMore)
 
       set({ messages, hasMore, isLoading: false })
+
+      // Cache initial messages for faster re-login
+      if (!before) {
+        messageCache.setDMMessages(dmId, newMessages, response.data.hasMore)
+      }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       set({

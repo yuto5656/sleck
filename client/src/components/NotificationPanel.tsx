@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { X, Check, Trash2, Bell } from 'lucide-react'
 import { format } from 'date-fns'
+import { useNotificationStore } from '../stores/notificationStore'
 import { notificationApi } from '../services/api'
 import { Notification } from '../types'
 
@@ -9,10 +11,9 @@ interface NotificationPanelProps {
 }
 
 export default function NotificationPanel({ onClose }: NotificationPanelProps) {
+  const navigate = useNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
+  const { notifications, unreadCount, isLoading, loadNotifications, markAsRead, markAllAsRead } = useNotificationStore()
 
   useEffect(() => {
     loadNotifications()
@@ -25,52 +26,38 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [onClose])
-
-  const loadNotifications = async () => {
-    try {
-      const response = await notificationApi.getNotifications({ limit: 50 })
-      setNotifications(response.data.notifications)
-      setUnreadCount(response.data.unreadCount)
-    } catch (error) {
-      console.error('Failed to load notifications:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  }, [onClose, loadNotifications])
 
   const handleMarkAsRead = async (id: string) => {
-    try {
-      await notificationApi.markAsRead(id)
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      )
-      setUnreadCount((prev) => Math.max(0, prev - 1))
-    } catch (error) {
-      console.error('Failed to mark as read:', error)
-    }
+    await markAsRead(id)
   }
 
   const handleMarkAllAsRead = async () => {
-    try {
-      await notificationApi.markAllAsRead()
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
-      setUnreadCount(0)
-    } catch (error) {
-      console.error('Failed to mark all as read:', error)
-    }
+    await markAllAsRead()
   }
 
   const handleDelete = async (id: string) => {
     try {
       await notificationApi.deleteNotification(id)
-      const notification = notifications.find((n) => n.id === id)
-      setNotifications((prev) => prev.filter((n) => n.id !== id))
-      if (notification && !notification.isRead) {
-        setUnreadCount((prev) => Math.max(0, prev - 1))
-      }
+      // Reload to update the list
+      loadNotifications()
     } catch (error) {
       console.error('Failed to delete notification:', error)
+    }
+  }
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.isRead) {
+      await markAsRead(notification.id)
+    }
+
+    // Navigate based on notification type
+    if (notification.referenceType === 'channel' && notification.referenceId) {
+      navigate(`/channel/${notification.referenceId}`)
+      onClose()
+    } else if (notification.referenceType === 'dm' && notification.referenceId) {
+      navigate(`/dm/${notification.referenceId}`)
+      onClose()
     }
   }
 
@@ -135,9 +122,10 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 hover:bg-gray-50 ${
+                className={`p-4 hover:bg-gray-50 cursor-pointer ${
                   !notification.isRead ? 'bg-blue-50' : ''
                 }`}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center text-sm">
@@ -149,7 +137,7 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
                       {format(new Date(notification.createdAt), 'MMM d, HH:mm')}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     {!notification.isRead && (
                       <button
                         type="button"
