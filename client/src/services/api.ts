@@ -60,6 +60,10 @@ export const authApi = {
   logout: () => api.post('/auth/logout'),
   refresh: (refreshToken: string) =>
     api.post('/auth/refresh', { refreshToken }),
+  forgotPassword: (email: string) =>
+    api.post('/auth/forgot-password', { email }),
+  resetPassword: (token: string, password: string) =>
+    api.post('/auth/reset-password', { token, password }),
 }
 
 // User API

@@ -65,6 +65,12 @@ export default function LoginPage() {
             />
           </div>
 
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-sm text-slack-purple hover:underline">
+              パスワードを忘れた場合
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}

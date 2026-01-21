@@ -1,12 +1,18 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt, { SignOptions } from 'jsonwebtoken'
+import crypto from 'crypto'
 import { body, validationResult } from 'express-validator'
 import { prisma } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
 
 const router = Router()
+
+// Generate a secure random token
+const generateResetToken = () => {
+  return crypto.randomBytes(32).toString('hex')
+}
 
 const generateTokens = (userId: string) => {
   const accessTokenOptions: SignOptions = {
@@ -179,5 +185,115 @@ router.post('/logout', authenticate, async (req: AuthRequest, res: Response, nex
     next(error)
   }
 })
+
+// Forgot password - request reset
+router.post(
+  '/forgot-password',
+  [body('email').isEmail().normalizeEmail()],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new AppError('Validation error', 400, 'VALIDATION_ERROR', errors.array())
+      }
+
+      const { email } = req.body
+
+      // Always return success to prevent email enumeration
+      const user = await prisma.user.findUnique({ where: { email } })
+
+      if (user) {
+        // Invalidate any existing tokens
+        await prisma.passwordResetToken.updateMany({
+          where: {
+            userId: user.id,
+            usedAt: null,
+          },
+          data: {
+            usedAt: new Date(),
+          },
+        })
+
+        // Create new reset token
+        const token = generateResetToken()
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            token,
+            expiresAt,
+          },
+        })
+
+        // In production, send email here
+        // For now, log the reset URL
+        const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${token}`
+        console.log(`Password reset URL for ${email}: ${resetUrl}`)
+      }
+
+      // Always return success
+      res.json({ message: 'If an account with that email exists, a password reset link has been sent.' })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Reset password - with token
+router.post(
+  '/reset-password',
+  [
+    body('token').notEmpty(),
+    body('password').isLength({ min: 8 }),
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new AppError('Validation error', 400, 'VALIDATION_ERROR', errors.array())
+      }
+
+      const { token, password } = req.body
+
+      // Find valid token
+      const resetToken = await prisma.passwordResetToken.findUnique({
+        where: { token },
+        include: { user: true },
+      })
+
+      if (!resetToken) {
+        throw new AppError('Invalid or expired reset token', 400, 'INVALID_TOKEN')
+      }
+
+      if (resetToken.usedAt) {
+        throw new AppError('This reset link has already been used', 400, 'TOKEN_USED')
+      }
+
+      if (resetToken.expiresAt < new Date()) {
+        throw new AppError('This reset link has expired', 400, 'TOKEN_EXPIRED')
+      }
+
+      // Hash new password
+      const passwordHash = await bcrypt.hash(password, 12)
+
+      // Update password and mark token as used
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: resetToken.userId },
+          data: { passwordHash },
+        }),
+        prisma.passwordResetToken.update({
+          where: { id: resetToken.id },
+          data: { usedAt: new Date() },
+        }),
+      ])
+
+      res.json({ message: 'Password has been reset successfully' })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
 
 export default router

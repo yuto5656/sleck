@@ -40,16 +40,17 @@ model User {
   updatedAt     DateTime   @updatedAt
 
   // Relations
-  workspaces       WorkspaceMember[]
-  channels         ChannelMember[]
-  messages         Message[]
-  reactions        Reaction[]
-  files            File[]
-  notifications    Notification[]
-  createdChannels  Channel[]         @relation("ChannelCreator")
-  dm1              DirectMessage[]   @relation("DMParticipant1")
-  dm2              DirectMessage[]   @relation("DMParticipant2")
-  dmMessages       DMMessage[]
+  workspaces          WorkspaceMember[]
+  channels            ChannelMember[]
+  messages            Message[]
+  reactions           Reaction[]
+  files               File[]
+  notifications       Notification[]
+  createdChannels     Channel[]            @relation("ChannelCreator")
+  dm1                 DirectMessage[]      @relation("DMParticipant1")
+  dm2                 DirectMessage[]      @relation("DMParticipant2")
+  dmMessages          DMMessage[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Workspace {
@@ -210,4 +211,19 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead, createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
 }
