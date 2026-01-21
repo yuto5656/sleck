@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Hash, Lock, Settings, Users, X, Trash2 } from 'lucide-react'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useMessageStore } from '../stores/messageStore'
+import { useAuthStore } from '../stores/authStore'
 import { socketService } from '../services/socket'
 import { channelApi } from '../services/api'
 import MessageList from '../components/MessageList'
@@ -19,6 +20,7 @@ interface ChannelMember {
 export default function ChannelPage() {
   const { channelId } = useParams<{ channelId: string }>()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const { channels, currentChannel, setCurrentChannel, deleteChannel } = useWorkspaceStore()
   const { messages, isLoading, hasMore, loadMessages, sendMessage, addMessage } = useMessageStore()
   const [typingUsers, setTypingUsers] = useState<string[]>([])
@@ -80,8 +82,13 @@ export default function ChannelPage() {
   }, [channelId, addMessage])
 
   const handleSendMessage = async (content: string) => {
-    if (channelId) {
-      await sendMessage(channelId, content)
+    if (channelId && user) {
+      await sendMessage(channelId, content, {
+        id: user.id,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl || null,
+        status: user.status,
+      })
     }
   }
 

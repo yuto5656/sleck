@@ -48,8 +48,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       // Set first workspace as current if none selected
       if (!get().currentWorkspace && workspaces.length > 0) {
         set({ currentWorkspace: workspaces[0] })
-        get().loadChannels(workspaces[0].id)
-        get().loadMembers(workspaces[0].id)
+        // Load channels and members in parallel for faster startup
+        Promise.all([
+          get().loadChannels(workspaces[0].id),
+          get().loadMembers(workspaces[0].id),
+        ])
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: { message?: string } } } }
@@ -63,8 +66,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   setCurrentWorkspace: (workspace) => {
     set({ currentWorkspace: workspace, currentChannel: null, channels: [], members: [] })
     if (workspace) {
-      get().loadChannels(workspace.id)
-      get().loadMembers(workspace.id)
+      // Load channels and members in parallel
+      Promise.all([
+        get().loadChannels(workspace.id),
+        get().loadMembers(workspace.id),
+      ])
     }
   },
 

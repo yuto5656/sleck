@@ -76,24 +76,31 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
     const trimmedContent = content.trim()
     if (!trimmedContent && files.length === 0) return
 
+    // Clear input immediately for fast UX
+    const contentToSend = trimmedContent
+    const filesToSend = [...files]
+    setContent('')
+    setFiles([])
+
+    // Stop typing immediately
+    if (isTyping) {
+      socketService.stopTyping({ channelId, dmId })
+      setIsTyping(false)
+    }
+
     setIsSending(true)
     try {
       // Upload files first if any
-      if (files.length > 0) {
-        await fileApi.uploadMultiple(files)
+      if (filesToSend.length > 0) {
+        await fileApi.uploadMultiple(filesToSend)
       }
 
-      await onSend(trimmedContent, files)
-      setContent('')
-      setFiles([])
-
-      // Stop typing
-      if (isTyping) {
-        socketService.stopTyping({ channelId, dmId })
-        setIsTyping(false)
-      }
+      await onSend(contentToSend, filesToSend)
     } catch (error) {
       console.error('Failed to send message:', error)
+      // Restore content on error
+      setContent(contentToSend)
+      setFiles(filesToSend)
     } finally {
       setIsSending(false)
     }

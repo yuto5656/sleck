@@ -3,14 +3,22 @@ import { Message } from '../types'
 import { messageApi } from '../services/api'
 import { socketService } from '../services/socket'
 
+interface UserInfo {
+  id: string
+  displayName: string
+  avatarUrl: string | null
+  status: string
+}
+
 interface MessageState {
   messages: Map<string, Message[]> // channelId -> messages
   isLoading: boolean
   hasMore: Map<string, boolean>
   error: string | null
+  pendingMessageIds: Set<string> // Track temp message IDs
 
   loadMessages: (channelId: string, before?: string) => Promise<void>
-  sendMessage: (channelId: string, content: string, parentId?: string) => Promise<void>
+  sendMessage: (channelId: string, content: string, user: UserInfo, parentId?: string) => Promise<void>
   editMessage: (messageId: string, content: string) => Promise<void>
   deleteMessage: (messageId: string) => Promise<void>
   addReaction: (messageId: string, emoji: string) => Promise<void>
@@ -30,6 +38,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   isLoading: false,
   hasMore: new Map(),
   error: null,
+  pendingMessageIds: new Set(),
 
   loadMessages: async (channelId, before) => {
     set({ isLoading: true, error: null })
@@ -61,11 +70,54 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
   },
 
-  sendMessage: async (channelId, content, parentId) => {
+  sendMessage: async (channelId, content, user, parentId) => {
+    // Optimistic update - add message immediately with temp ID
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const tempMessage: Message = {
+      id: tempId,
+      content,
+      channelId,
+      parentId: parentId || null,
+      user: {
+        id: user.id,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        status: user.status,
+      },
+      files: [],
+      reactions: [],
+      threadCount: 0,
+      isEdited: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    // Add temp message immediately and track the pending ID
+    const messages = new Map(get().messages)
+    const channelMessages = messages.get(channelId) || []
+    messages.set(channelId, [...channelMessages, tempMessage])
+    const pendingMessageIds = new Set(get().pendingMessageIds)
+    pendingMessageIds.add(tempId)
+    set({ messages, pendingMessageIds })
+
     try {
       await messageApi.sendMessage(channelId, { content, parentId })
-      // Message will be added via socket event
+      // Remove temp message - socket event will add the real message
+      const updatedMessages = new Map(get().messages)
+      const currentMessages = updatedMessages.get(channelId) || []
+      updatedMessages.set(channelId, currentMessages.filter(m => m.id !== tempId))
+      const updatedPendingIds = new Set(get().pendingMessageIds)
+      updatedPendingIds.delete(tempId)
+      set({ messages: updatedMessages, pendingMessageIds: updatedPendingIds })
     } catch (error: unknown) {
+      // Remove temp message on error
+      const updatedMessages = new Map(get().messages)
+      const currentMessages = updatedMessages.get(channelId) || []
+      updatedMessages.set(channelId, currentMessages.filter(m => m.id !== tempId))
+      const updatedPendingIds = new Set(get().pendingMessageIds)
+      updatedPendingIds.delete(tempId)
+      set({ messages: updatedMessages, pendingMessageIds: updatedPendingIds })
+
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       set({ error: err.response?.data?.error?.message || 'Failed to send message' })
       throw error
