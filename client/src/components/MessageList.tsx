@@ -65,7 +65,7 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore }
     <div
       ref={listRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto px-4 py-2"
+      className="flex-1 min-h-0 overflow-y-auto px-4 py-2"
     >
       {isLoading && hasMore && (
         <div className="text-center py-2 text-gray-500">メッセージを読み込み中...</div>

@@ -204,16 +204,8 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   clearError: () => set({ error: null }),
 }))
 
-// Set up socket listeners
-socketService.onNewMessage((message) => {
-  // Find which channel this message belongs to by looking at current channels
-  const { messages } = useMessageStore.getState()
-  for (const channelId of messages.keys()) {
-    // This is a simplification - in reality, message should include channelId
-    useMessageStore.getState().addMessage(channelId, message)
-    break
-  }
-})
+// Set up socket listeners for global events (edit, delete, reactions)
+// Note: New messages are handled in ChannelPage.tsx with the correct channelId
 
 socketService.onMessageUpdate((message) => {
   useMessageStore.getState().updateMessage(message)

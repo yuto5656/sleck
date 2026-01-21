@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { Smile, MessageSquare, Edit2, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
@@ -7,6 +7,47 @@ import { Message } from '../types'
 import { useMessageStore } from '../stores/messageStore'
 import { useAuthStore } from '../stores/authStore'
 import EmojiPicker from 'emoji-picker-react'
+
+// Format message content with mention highlighting
+function formatMentions(content: string, currentUserId?: string): React.ReactNode[] {
+  const mentionRegex = /@(\S+)/g
+  const parts: React.ReactNode[] = []
+  let lastIndex = 0
+  let match
+
+  while ((match = mentionRegex.exec(content)) !== null) {
+    // Add text before mention
+    if (match.index > lastIndex) {
+      parts.push(content.slice(lastIndex, match.index))
+    }
+
+    const mentionName = match[1]
+    const isSelfMention = currentUserId && mentionName.toLowerCase() === currentUserId.toLowerCase()
+
+    parts.push(
+      <span
+        key={match.index}
+        className={clsx(
+          'px-1 rounded font-medium',
+          isSelfMention
+            ? 'bg-yellow-200 text-yellow-900'
+            : 'bg-blue-100 text-blue-800'
+        )}
+      >
+        @{mentionName}
+      </span>
+    )
+
+    lastIndex = match.index + match[0].length
+  }
+
+  // Add remaining text
+  if (lastIndex < content.length) {
+    parts.push(content.slice(lastIndex))
+  }
+
+  return parts.length > 0 ? parts : [content]
+}
 
 interface MessageItemProps {
   message: Message
@@ -134,8 +175,8 @@ export default function MessageItem({ message, showHeader, isOwn }: MessageItemP
               </div>
             </div>
           ) : (
-            <div className="text-gray-800 break-words prose prose-sm max-w-none">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
+            <div className="text-gray-800 break-words">
+              {formatMentions(message.content, user?.displayName)}
             </div>
           )}
 
