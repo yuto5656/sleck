@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import jwt, { SignOptions } from 'jsonwebtoken'
 import { body, validationResult } from 'express-validator'
 import { prisma } from '../index'
 import { AppError } from '../middleware/errorHandler'
@@ -9,16 +9,23 @@ import { authenticate, AuthRequest } from '../middleware/auth'
 const router = Router()
 
 const generateTokens = (userId: string) => {
+  const accessTokenOptions: SignOptions = {
+    expiresIn: 900 // 15 minutes in seconds
+  }
+  const refreshTokenOptions: SignOptions = {
+    expiresIn: 604800 // 7 days in seconds
+  }
+
   const accessToken = jwt.sign(
     { userId },
     process.env.JWT_SECRET || 'secret',
-    { expiresIn: (process.env.JWT_EXPIRES_IN || '15m') as string }
+    accessTokenOptions
   )
 
   const refreshToken = jwt.sign(
     { userId },
     process.env.JWT_REFRESH_SECRET || 'refresh-secret',
-    { expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as string }
+    refreshTokenOptions
   )
 
   return { accessToken, refreshToken }
