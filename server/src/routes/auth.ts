@@ -6,6 +6,7 @@ import { body, validationResult } from 'express-validator'
 import { prisma } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
+import { sendPasswordResetEmail } from '../services/email'
 
 const router = Router()
 
@@ -226,10 +227,9 @@ router.post(
           },
         })
 
-        // In production, send email here
-        // For now, log the reset URL
+        // Send password reset email
         const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${token}`
-        console.log(`Password reset URL for ${email}: ${resetUrl}`)
+        await sendPasswordResetEmail(email, resetUrl)
       }
 
       // Always return success
