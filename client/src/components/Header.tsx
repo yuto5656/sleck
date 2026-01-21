@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import SearchModal from './SearchModal'
 import UserMenu from './UserMenu'
 import NotificationPanel from './NotificationPanel'
+import WorkspaceMenu from './WorkspaceMenu'
 
 export default function Header() {
   const { user } = useAuthStore()
@@ -12,16 +13,24 @@ export default function Header() {
   const [showSearch, setShowSearch] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false)
 
   return (
     <header className="bg-slack-purple h-10 flex items-center px-4 text-white">
       <div className="flex-1 flex items-center gap-4">
-        <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
+          className="flex items-center gap-1 hover:bg-white/10 rounded px-2 py-1"
+        >
           <span className="font-bold text-lg">
             {currentWorkspace?.name || 'Sleck'}
           </span>
           <ChevronDown className="w-4 h-4" />
-        </div>
+        </button>
+        {showWorkspaceMenu && (
+          <WorkspaceMenu onClose={() => setShowWorkspaceMenu(false)} />
+        )}
       </div>
 
       <div className="flex-1 max-w-xl">
