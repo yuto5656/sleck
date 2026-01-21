@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserStatus {
+  online
+  away
+  dnd
+  offline
+}
+
+enum WorkspaceRole {
+  owner
+  admin
+  member
+}
+
+enum NotificationType {
+  mention
+  dm
+  thread
+  reaction
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  displayName   String
+  avatarUrl     String?
+  passwordHash  String
+  status        UserStatus @default(offline)
+  statusMessage String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  workspaces       WorkspaceMember[]
+  channels         ChannelMember[]
+  messages         Message[]
+  reactions        Reaction[]
+  files            File[]
+  notifications    Notification[]
+  createdChannels  Channel[]         @relation("ChannelCreator")
+  dm1              DirectMessage[]   @relation("DMParticipant1")
+  dm2              DirectMessage[]   @relation("DMParticipant2")
+  dmMessages       DMMessage[]
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  iconUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members  WorkspaceMember[]
+  channels Channel[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  userId      String
+  workspaceId String
+  role        WorkspaceRole @default(member)
+  joinedAt    DateTime      @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model Channel {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  isPrivate   Boolean  @default(false)
+  workspaceId String
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User            @relation("ChannelCreator", fields: [createdById], references: [id])
+  members   ChannelMember[]
+  messages  Message[]
+
+  @@unique([workspaceId, name])
+}
+
+model ChannelMember {
+  id         String    @id @default(uuid())
+  userId     String
+  channelId  String
+  joinedAt   DateTime  @default(now())
+  lastReadAt DateTime?
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channelId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  channelId String
+  userId    String
+  parentId  String?
+  isEdited  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  channel   Channel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Message?   @relation("MessageThread", fields: [parentId], references: [id])
+  replies   Message[]  @relation("MessageThread")
+  reactions Reaction[]
+  files     File[]
+
+  @@index([channelId, createdAt])
+  @@index([parentId])
+}
+
+model Reaction {
+  id        String   @id @default(uuid())
+  emoji     String
+  userId    String
+  messageId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messageId, emoji])
+}
+
+model File {
+  id           String   @id @default(uuid())
+  messageId    String?
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  message    Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  uploadedBy User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+}
+
+model DirectMessage {
+  id             String   @id @default(uuid())
+  participant1Id String
+  participant2Id String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  participant1 User        @relation("DMParticipant1", fields: [participant1Id], references: [id], onDelete: Cascade)
+  participant2 User        @relation("DMParticipant2", fields: [participant2Id], references: [id], onDelete: Cascade)
+  messages     DMMessage[]
+
+  @@unique([participant1Id, participant2Id])
+}
+
+model DMMessage {
+  id        String   @id @default(uuid())
+  dmId      String
+  senderId  String
+  content   String
+  isEdited  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  dm     DirectMessage @relation(fields: [dmId], references: [id], onDelete: Cascade)
+  sender User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([dmId, createdAt])
+}
+
+model Notification {
+  id            String           @id @default(uuid())
+  userId        String
+  type          NotificationType
+  content       String
+  referenceId   String?
+  referenceType String?
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}

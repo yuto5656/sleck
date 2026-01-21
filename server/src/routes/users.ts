@@ -1,0 +1,184 @@
+import { Router, Response, NextFunction } from 'express'
+import { body, validationResult } from 'express-validator'
+import { prisma } from '../index'
+import { AppError } from '../middleware/errorHandler'
+import { authenticate, AuthRequest } from '../middleware/auth'
+import multer from 'multer'
+import path from 'path'
+import { v4 as uuid } from 'uuid'
+
+const router = Router()
+
+// File upload config for avatar
+const storage = multer.diskStorage({
+  destination: 'uploads/avatars',
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname)
+    cb(null, `${uuid()}${ext}`)
+  },
+})
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error('Invalid file type'))
+    }
+  },
+})
+
+// Get current user
+router.get('/me', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        avatarUrl: true,
+        status: true,
+        statusMessage: true,
+        createdAt: true,
+      },
+    })
+
+    if (!user) {
+      throw new AppError('User not found', 404, 'NOT_FOUND')
+    }
+
+    res.json(user)
+  } catch (error) {
+    next(error)
+  }
+})
+
+// Update profile
+router.patch(
+  '/me',
+  authenticate,
+  [
+    body('displayName').optional().trim().isLength({ min: 1, max: 100 }),
+    body('statusMessage').optional().trim().isLength({ max: 100 }),
+  ],
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new AppError('Validation error', 400, 'VALIDATION_ERROR', errors.array())
+      }
+
+      const { displayName, statusMessage } = req.body
+
+      const user = await prisma.user.update({
+        where: { id: req.userId },
+        data: {
+          ...(displayName && { displayName }),
+          ...(statusMessage !== undefined && { statusMessage }),
+        },
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          avatarUrl: true,
+          status: true,
+          statusMessage: true,
+          createdAt: true,
+        },
+      })
+
+      res.json(user)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Update status
+router.patch(
+  '/me/status',
+  authenticate,
+  [body('status').isIn(['online', 'away', 'dnd', 'offline'])],
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new AppError('Validation error', 400, 'VALIDATION_ERROR', errors.array())
+      }
+
+      const { status } = req.body
+
+      const user = await prisma.user.update({
+        where: { id: req.userId },
+        data: { status },
+        select: {
+          id: true,
+          status: true,
+        },
+      })
+
+      res.json(user)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Upload avatar
+router.post(
+  '/me/avatar',
+  authenticate,
+  upload.single('avatar'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) {
+        throw new AppError('No file uploaded', 400, 'VALIDATION_ERROR')
+      }
+
+      const avatarUrl = `/uploads/avatars/${req.file.filename}`
+
+      const user = await prisma.user.update({
+        where: { id: req.userId },
+        data: { avatarUrl },
+        select: {
+          id: true,
+          avatarUrl: true,
+        },
+      })
+
+      res.json(user)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Get user by ID
+router.get('/:userId', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.userId },
+      select: {
+        id: true,
+        displayName: true,
+        avatarUrl: true,
+        status: true,
+        statusMessage: true,
+      },
+    })
+
+    if (!user) {
+      throw new AppError('User not found', 404, 'NOT_FOUND')
+    }
+
+    res.json(user)
+  } catch (error) {
+    next(error)
+  }
+})
+
+export default router

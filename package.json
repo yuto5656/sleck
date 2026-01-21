@@ -1,0 +1,20 @@
+{
+  "name": "sleck",
+  "version": "1.0.0",
+  "description": "Slack-like messaging application",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "db:migrate": "cd server && npm run db:migrate",
+    "db:generate": "cd server && npm run db:generate",
+    "db:studio": "cd server && npm run db:studio"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
