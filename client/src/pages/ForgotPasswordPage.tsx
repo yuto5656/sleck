@@ -26,10 +26,10 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-slack-purple flex items-center justify-center p-4">
+      <div className="min-h-screen bg-primary-600 dark:bg-gray-900 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-slack-purple mb-2">Sleck</h1>
+            <h1 className="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">Sleck</h1>
             <p className="text-gray-600">メールを確認してください</p>
           </div>
 
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
 
             <Link
               to="/login"
-              className="inline-block text-slack-purple hover:underline font-medium"
+              className="inline-block text-primary-600 dark:text-primary-400 hover:underline font-medium"
             >
               ログインページに戻る
             </Link>
@@ -56,10 +56,10 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slack-purple flex items-center justify-center p-4">
+    <div className="min-h-screen bg-primary-600 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slack-purple mb-2">Sleck</h1>
+          <h1 className="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">Sleck</h1>
           <p className="text-gray-600">パスワードをリセット</p>
         </div>
 
@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-slack-purple"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="name@example.com"
             />
           </div>
@@ -92,14 +92,14 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-slack-purple text-white rounded font-medium hover:bg-slack-purple-dark disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-primary-600 dark:bg-gray-900 text-white rounded font-medium hover:bg-primary-600 dark:bg-gray-900-dark disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? '送信中...' : 'リセットリンクを送信'}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <Link to="/login" className="text-slack-purple hover:underline font-medium">
+          <Link to="/login" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
             ログインに戻る
           </Link>
         </div>

@@ -21,10 +21,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slack-purple dark:bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-primary-600 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slack-purple dark:text-primary-400 mb-2">Sleck</h1>
+          <h1 className="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">Sleck</h1>
           <p className="text-gray-600 dark:text-gray-400">ワークスペースにサインイン</p>
         </div>
 
@@ -45,7 +45,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-slack-purple dark:focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="name@example.com"
             />
           </div>
@@ -60,7 +60,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-slack-purple dark:focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="パスワードを入力"
             />
           </div>
@@ -74,7 +74,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-slack-purple dark:bg-primary-500 text-white rounded font-medium hover:bg-slack-purple-dark dark:hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-primary-500 text-white rounded font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'サインイン中...' : 'サインイン'}
           </button>
@@ -82,7 +82,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
           Sleckは初めてですか？{' '}
-          <Link to="/register" className="text-slack-purple dark:text-primary-400 hover:underline font-medium">
+          <Link to="/register" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
             アカウントを作成
           </Link>
         </div>

@@ -68,7 +68,7 @@ export default function UserProfileModal({
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden">
         {/* Header with avatar */}
-        <div className="relative bg-gradient-to-br from-slack-purple to-purple-700 h-24">
+        <div className="relative bg-gradient-to-br from-primary-500 to-purple-700 h-24">
           <button
             type="button"
             onClick={onClose}
@@ -138,7 +138,7 @@ export default function UserProfileModal({
                   onStartDM(user.id)
                   onClose()
                 }}
-                className="flex items-center gap-2 w-full px-4 py-2 bg-slack-purple hover:bg-slack-purple-dark text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 w-full px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>メッセージを送る</span>

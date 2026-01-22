@@ -43,7 +43,7 @@ export default function WorkspacePage() {
       <div className="w-full max-w-md p-8">
         {workspaces.length === 0 ? (
           <div className="text-center">
-            <div className="w-20 h-20 bg-slack-purple rounded-lg mx-auto mb-6 flex items-center justify-center">
+            <div className="w-20 h-20 bg-primary-500 rounded-lg mx-auto mb-6 flex items-center justify-center">
               <Users className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -54,7 +54,7 @@ export default function WorkspacePage() {
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-slack-purple text-white rounded-lg font-medium hover:bg-slack-purple-dark"
+              className="px-6 py-3 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-500-dark"
             >
               ワークスペースを作成
             </button>
@@ -71,11 +71,11 @@ export default function WorkspacePage() {
                   onClick={() => handleSelectWorkspace(workspace)}
                   className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-colors ${
                     currentWorkspace?.id === workspace.id
-                      ? 'border-slack-purple bg-purple-50'
+                      ? 'border-primary-500 bg-purple-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="w-12 h-12 bg-slack-purple rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                  <div className="w-12 h-12 bg-primary-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
                     {workspace.iconUrl ? (
                       <img
                         src={workspace.iconUrl}
@@ -122,7 +122,7 @@ export default function WorkspacePage() {
                   value={newWorkspaceName}
                   onChange={(e) => setNewWorkspaceName(e.target.value)}
                   placeholder="例: 開発チーム"
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-slack-purple"
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
                   autoFocus
                 />
               </div>
@@ -137,7 +137,7 @@ export default function WorkspacePage() {
                 <button
                   type="submit"
                   disabled={isCreating || !newWorkspaceName.trim()}
-                  className="px-4 py-2 bg-slack-purple text-white rounded hover:bg-slack-purple-dark disabled:opacity-50"
+                  className="px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-500-dark disabled:opacity-50"
                 >
                   {isCreating ? '作成中...' : '作成'}
                 </button>
