@@ -20,6 +20,11 @@ export default function UserMenu({ onClose, triggerSelector }: UserMenuProps) {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      // Don't close if a modal is open
+      if (showProfile || showSettings) {
+        return
+      }
+
       const target = e.target as Node
       // Don't close if clicking the trigger button (toggle will handle it)
       if (triggerSelector) {
@@ -35,7 +40,7 @@ export default function UserMenu({ onClose, triggerSelector }: UserMenuProps) {
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [onClose, triggerSelector])
+  }, [onClose, triggerSelector, showProfile, showSettings])
 
   const handleLogout = async () => {
     await logout()
