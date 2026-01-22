@@ -37,7 +37,7 @@ export default function Layout() {
     const cleanup = socketService.onUserStatus((data) => {
       // Update own user status when server confirms it
       if (user && data.userId === user.id) {
-        setUser({ ...user, status: data.status })
+        setUser({ ...user, status: data.status as 'online' | 'away' | 'dnd' | 'offline' })
       }
     })
 
