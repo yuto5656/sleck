@@ -18,6 +18,7 @@ interface MessageItemProps {
   showHeader: boolean
   isOwn: boolean
   onOpenThread?: (message: Message) => void
+  onUserClick?: (userId: string) => void
 }
 
 // Custom comparison function for React.memo
@@ -33,13 +34,23 @@ function arePropsEqual(prevProps: MessageItemProps, nextProps: MessageItemProps)
   )
 }
 
-const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOpenThread }: MessageItemProps) {
+const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOpenThread, onUserClick }: MessageItemProps) {
   const { user } = useAuthStore()
   const { members } = useWorkspaceStore()
   const { addReaction, removeReaction, editMessage, deleteMessage } = useMessageStore()
 
   // Get valid user names for mention validation
   const validUserNames = members.map(m => m.displayName)
+
+  // Helper function to get user names from IDs for reaction tooltip
+  const getReactionUserNames = (userIds: string[]): string => {
+    const names = userIds.map(id => {
+      if (id === user?.id) return 'あなた'
+      const member = members.find(m => m.id === id)
+      return member?.displayName || '不明なユーザー'
+    })
+    return names.join('、')
+  }
   const { showConfirm } = useConfirmDialog()
   const toast = useToast()
   const [showActions, setShowActions] = useState(false)
@@ -109,7 +120,11 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
     >
       <div className="flex gap-2">
         {showHeader ? (
-          <div className="w-9 h-9 rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
+          <button
+            type="button"
+            onClick={() => onUserClick?.(message.user.id)}
+            className="w-9 h-9 rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200 hover:opacity-80 transition-opacity cursor-pointer"
+          >
             {getAvatarUrl(message.user.avatarUrl) ? (
               <img
                 src={getAvatarUrl(message.user.avatarUrl)!}
@@ -119,7 +134,7 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
             ) : (
               message.user.displayName.charAt(0).toUpperCase()
             )}
-          </div>
+          </button>
         ) : (
           <div className="w-9 flex-shrink-0" />
         )}
@@ -127,7 +142,13 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
         <div className="flex-1 min-w-0">
           {showHeader && (
             <div className="flex items-baseline gap-2">
-              <span className="font-bold text-gray-900 dark:text-white">{message.user.displayName}</span>
+              <button
+                type="button"
+                onClick={() => onUserClick?.(message.user.id)}
+                className="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer"
+              >
+                {message.user.displayName}
+              </button>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {format(new Date(message.createdAt), 'HH:mm')}
               </span>
@@ -220,6 +241,7 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
                   type="button"
                   key={reaction.emoji}
                   onClick={() => handleReactionClick(reaction.emoji)}
+                  title={getReactionUserNames(reaction.users)}
                   className={clsx(
                     'flex items-center gap-1 px-2 py-0.5 rounded-full text-sm border',
                     reaction.users.includes(user?.id || '')

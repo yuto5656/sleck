@@ -31,6 +31,9 @@ export function formatMentions(
   validUserNames: string[],
   currentUserName?: string
 ): React.ReactNode[] {
+  // Special mentions that notify all users
+  const specialMentions = ['channel', 'everyone']
+
   // Match @<name with spaces> or @name (no spaces)
   const mentionRegex = /@(?:<([^>]+)>|(\S+))/g
   const parts: React.ReactNode[] = []
@@ -45,6 +48,9 @@ export function formatMentions(
     // match[1] is name in brackets, match[2] is name without brackets
     const mentionName = match[1] || match[2]
 
+    // Check if this is a special mention (@channel or @everyone)
+    const isSpecialMention = specialMentions.includes(mentionName.toLowerCase())
+
     // Check if this mention matches a valid user
     const isValidMention = validNamesLower.has(mentionName.toLowerCase())
 
@@ -54,7 +60,17 @@ export function formatMentions(
       parts.push(...formatNewlines(textBefore, `text-${partIndex++}`))
     }
 
-    if (isValidMention) {
+    if (isSpecialMention) {
+      // Special mention (@channel, @everyone) - highlight for everyone
+      parts.push(
+        <span
+          key={`mention-${match.index}`}
+          className="px-1 rounded font-medium bg-yellow-200 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-200"
+        >
+          @{mentionName}
+        </span>
+      )
+    } else if (isValidMention) {
       // Valid mention - highlight it
       const displayText = match[1] ? match[1] : match[2]
       const isSelfMention = currentUserName && mentionName.toLowerCase() === currentUserName.toLowerCase()

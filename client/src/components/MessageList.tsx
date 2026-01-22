@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Message } from '../types'
 import { useAuthStore } from '../stores/authStore'
+import { useWorkspaceStore } from '../stores/workspaceStore'
+import { dmApi } from '../services/api'
 import { formatDateDivider, shouldShowDateDivider, shouldShowMessageHeader } from '../utils/dateUtils'
 import MessageItem from './MessageItem'
+import UserProfileModal from './UserProfileModal'
 
 interface MessageListProps {
   messages: Message[]
@@ -13,9 +17,48 @@ interface MessageListProps {
 }
 
 export default function MessageList({ messages, isLoading, hasMore, onLoadMore, onOpenThread }: MessageListProps) {
+  const navigate = useNavigate()
   const { user } = useAuthStore()
+  const { members } = useWorkspaceStore()
   const listRef = useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = useState(true)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+
+  // Find user data for profile modal
+  const selectedUser = useMemo(() => {
+    if (!selectedUserId) return null
+    // First check workspace members
+    const member = members.find(m => m.id === selectedUserId)
+    if (member) {
+      return {
+        id: member.id,
+        displayName: member.displayName,
+        avatarUrl: member.avatarUrl,
+        status: member.status,
+        statusMessage: member.statusMessage,
+        role: member.role,
+      }
+    }
+    // Fallback to finding from messages
+    const msg = messages.find(m => m.user.id === selectedUserId)
+    if (msg) {
+      return {
+        id: msg.user.id,
+        displayName: msg.user.displayName,
+        avatarUrl: msg.user.avatarUrl,
+      }
+    }
+    return null
+  }, [selectedUserId, members, messages])
+
+  const handleStartDM = async (userId: string) => {
+    try {
+      const response = await dmApi.createDM(userId)
+      navigate(`/dm/${response.data.id}`)
+    } catch (error) {
+      console.error('Failed to start DM:', error)
+    }
+  }
 
   useEffect(() => {
     if (autoScroll && listRef.current) {
@@ -93,6 +136,7 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore, 
               showHeader={showHeader}
               isOwn={message.user.id === user?.id}
               onOpenThread={onOpenThread}
+              onUserClick={setSelectedUserId}
             />
           </div>
         )
@@ -103,6 +147,17 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore, 
           <p className="text-lg">まだメッセージがありません</p>
           <p className="text-sm">最初のメッセージを送信しましょう！</p>
         </div>
+      )}
+
+      {/* User Profile Modal */}
+      {selectedUser && (
+        <UserProfileModal
+          user={selectedUser}
+          isOpen={!!selectedUser}
+          onClose={() => setSelectedUserId(null)}
+          onStartDM={handleStartDM}
+          isCurrentUser={selectedUser.id === user?.id}
+        />
       )}
     </div>
   )
