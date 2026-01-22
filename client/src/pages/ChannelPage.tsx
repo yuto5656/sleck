@@ -117,50 +117,55 @@ export default function ChannelPage() {
 
   if (!currentChannel) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500">
-        チャンネルを選択してチャットを始めましょう
+      <div className="flex-1 flex items-center justify-center text-gray-400 bg-surface-50">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary-100 to-accent-100 flex items-center justify-center">
+            <Hash className="w-8 h-8 text-primary-500" />
+          </div>
+          <p className="font-medium">チャンネルを選択してチャットを始めましょう</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-surface-50">
       {/* Channel header */}
-      <div className="h-14 border-b flex items-center justify-between px-4 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          {currentChannel.isPrivate ? (
-            <Lock className="w-5 h-5 text-gray-500" />
-          ) : (
-            <Hash className="w-5 h-5 text-gray-500" />
-          )}
-          <h1 className="font-bold text-lg">{currentChannel.name}</h1>
+      <div className="h-16 bg-white/80 backdrop-blur-sm border-b border-surface-200 flex items-center justify-between px-6 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-100 to-accent-100 flex items-center justify-center">
+            {currentChannel.isPrivate ? (
+              <Lock className="w-5 h-5 text-primary-600" />
+            ) : (
+              <Hash className="w-5 h-5 text-primary-600" />
+            )}
+          </div>
+          <div>
+            <h1 className="font-semibold text-lg text-gray-900">{currentChannel.name}</h1>
+            {currentChannel.description && (
+              <p className="text-xs text-gray-500 truncate max-w-md">{currentChannel.description}</p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleShowMembers}
-            className={`p-2 hover:bg-gray-100 rounded ${showMembers ? 'bg-gray-100' : ''}`}
+            className={`p-2.5 rounded-xl transition-all duration-200 ${showMembers ? 'bg-primary-100 text-primary-600' : 'hover:bg-surface-100 text-gray-500'}`}
             title="メンバー"
           >
-            <Users className="w-5 h-5 text-gray-500" />
+            <Users className="w-5 h-5" />
           </button>
           <button
             type="button"
             onClick={handleShowSettings}
-            className={`p-2 hover:bg-gray-100 rounded ${showSettings ? 'bg-gray-100' : ''}`}
+            className={`p-2.5 rounded-xl transition-all duration-200 ${showSettings ? 'bg-primary-100 text-primary-600' : 'hover:bg-surface-100 text-gray-500'}`}
             title="設定"
           >
-            <Settings className="w-5 h-5 text-gray-500" />
+            <Settings className="w-5 h-5" />
           </button>
         </div>
       </div>
-
-      {/* Channel description */}
-      {currentChannel.description && (
-        <div className="px-4 py-2 text-sm text-gray-600 border-b flex-shrink-0">
-          {currentChannel.description}
-        </div>
-      )}
 
       {/* Messages */}
       <MessageList
@@ -171,9 +176,14 @@ export default function ChannelPage() {
       />
 
       {/* Typing indicator and Message input - fixed at bottom */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm border-t border-surface-200">
         {typingUsers.length > 0 && (
-          <div className="px-4 py-1 text-sm text-gray-500">
+          <div className="px-6 py-2 text-sm text-primary-600 flex items-center gap-2">
+            <span className="flex gap-1">
+              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </span>
             {typingUsers.length === 1
               ? '誰かが入力中...'
               : `${typingUsers.length}人が入力中...`}

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Send, Paperclip, Smile, AtSign } from 'lucide-react'
+import { Send, Paperclip, Smile, AtSign, X } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import EmojiPicker from 'emoji-picker-react'
 import clsx from 'clsx'
@@ -34,14 +34,12 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Filter members based on mention search
   const filteredMembers: MentionMember[] = showMentionList
     ? members.filter((m) =>
         m.displayName.toLowerCase().includes(mentionSearch.toLowerCase())
       ).slice(0, 5)
     : []
 
-  // Reset mention index when filtered list changes
   useEffect(() => {
     setMentionIndex(0)
   }, [mentionSearch])
@@ -53,7 +51,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     noClick: true,
-    maxSize: 50 * 1024 * 1024, // 50MB
+    maxSize: 50 * 1024 * 1024,
   })
 
   const handleTyping = () => {
@@ -76,13 +74,11 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
     const trimmedContent = content.trim()
     if (!trimmedContent && files.length === 0) return
 
-    // Clear input immediately for fast UX
     const contentToSend = trimmedContent
     const filesToSend = [...files]
     setContent('')
     setFiles([])
 
-    // Stop typing immediately
     if (isTyping) {
       socketService.stopTyping({ channelId, dmId })
       setIsTyping(false)
@@ -90,15 +86,12 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
 
     setIsSending(true)
     try {
-      // Upload files first if any
       if (filesToSend.length > 0) {
         await fileApi.uploadMultiple(filesToSend)
       }
-
       await onSend(contentToSend, filesToSend)
     } catch (error) {
       console.error('Failed to send message:', error)
-      // Restore content on error
       setContent(contentToSend)
       setFiles(filesToSend)
     } finally {
@@ -107,7 +100,6 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Handle mention list navigation
     if (showMentionList && filteredMembers.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
@@ -148,7 +140,6 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
     setContent(value)
     handleTyping()
 
-    // Check for mention trigger
     const cursorPos = e.target.selectionStart || 0
     const textBeforeCursor = value.slice(0, cursorPos)
     const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
@@ -167,7 +158,6 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
     const textBeforeCursor = content.slice(0, cursorPos)
     const textAfterCursor = content.slice(cursorPos)
 
-    // Replace @search with @displayName
     const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
     if (mentionMatch) {
       const beforeMention = textBeforeCursor.slice(0, mentionMatch.index)
@@ -194,28 +184,28 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
   return (
     <div {...getRootProps()} className="relative px-4 pb-4">
       {isDragActive && (
-        <div className="absolute inset-0 bg-blue-50 border-2 border-dashed border-blue-400 rounded-lg flex items-center justify-center z-10">
-          <p className="text-blue-600 font-medium">ファイルをここにドロップ</p>
+        <div className="absolute inset-0 bg-primary-50 border-2 border-dashed border-primary-400 rounded-2xl flex items-center justify-center z-10 animate-fade-in">
+          <p className="text-primary-600 font-medium">ファイルをここにドロップ</p>
         </div>
       )}
 
       {/* File previews */}
       {files.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-2">
+        <div className="mb-3 flex flex-wrap gap-2">
           {files.map((file, index) => (
             <div
               key={index}
-              className="relative group bg-gray-100 rounded p-2 pr-6"
+              className="relative group bg-surface-100 rounded-xl p-3 pr-8 border border-surface-200 animate-slide-up"
             >
-              <span className="text-sm text-gray-700 truncate max-w-xs block">
+              <span className="text-sm text-gray-700 truncate max-w-xs block font-medium">
                 {file.name}
               </span>
               <button
                 type="button"
                 onClick={() => removeFile(index)}
-                className="absolute top-1 right-1 w-4 h-4 bg-gray-300 rounded-full text-xs hover:bg-gray-400"
+                className="absolute top-2 right-2 w-5 h-5 bg-gray-300 rounded-full text-xs hover:bg-red-400 hover:text-white transition-colors flex items-center justify-center"
               >
-                ×
+                <X className="w-3 h-3" />
               </button>
             </div>
           ))}
@@ -223,18 +213,19 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
       )}
 
       <div className={clsx(
-        'flex items-center gap-2 border rounded-lg p-2',
-        isDragActive && 'border-blue-400 bg-blue-50'
+        'flex items-center gap-2 bg-surface-50 border border-surface-200 rounded-2xl p-2 transition-all duration-200',
+        isDragActive && 'border-primary-400 bg-primary-50',
+        'focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-500/20'
       )}>
         <input {...getInputProps()} />
 
         <button
           type="button"
           onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
-          className="p-2 hover:bg-gray-100 rounded flex-shrink-0"
+          className="p-2.5 hover:bg-surface-200 rounded-xl flex-shrink-0 transition-colors"
           title="ファイルを添付"
         >
-          <Paperclip className="w-5 h-5 text-gray-500" />
+          <Paperclip className="w-5 h-5 text-gray-400" />
         </button>
 
         <textarea
@@ -243,7 +234,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
           onChange={handleContentChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 resize-none outline-none max-h-32 py-1 leading-normal"
+          className="flex-1 resize-none outline-none max-h-32 py-2 leading-normal bg-transparent text-gray-800 placeholder-gray-400"
           rows={1}
           disabled={isSending}
         />
@@ -252,19 +243,19 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-2.5 hover:bg-surface-200 rounded-xl transition-colors"
             title="絵文字"
           >
-            <Smile className="w-5 h-5 text-gray-500" />
+            <Smile className="w-5 h-5 text-gray-400" />
           </button>
 
           <button
             type="button"
             onClick={handleMentionButtonClick}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-2.5 hover:bg-surface-200 rounded-xl transition-colors"
             title="メンション"
           >
-            <AtSign className="w-5 h-5 text-gray-500" />
+            <AtSign className="w-5 h-5 text-gray-400" />
           </button>
 
           <button
@@ -272,10 +263,10 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
             onClick={handleSend}
             disabled={isSending || (!content.trim() && files.length === 0)}
             className={clsx(
-              'p-2 rounded',
+              'p-2.5 rounded-xl transition-all duration-200',
               content.trim() || files.length > 0
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:shadow-glow hover:-translate-y-0.5'
+                : 'bg-surface-200 text-gray-400 cursor-not-allowed'
             )}
             title="送信"
           >
@@ -285,29 +276,30 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
       </div>
 
       {showEmojiPicker && (
-        <div className="absolute bottom-full right-4 mb-2 z-50">
+        <div className="absolute bottom-full right-4 mb-2 z-50 animate-slide-up">
           <EmojiPicker onEmojiClick={handleEmojiSelect} />
         </div>
       )}
 
       {/* Mention list */}
       {showMentionList && filteredMembers.length > 0 && (
-        <div className="absolute bottom-full left-4 mb-2 bg-white border rounded-lg shadow-lg z-50 w-64 max-h-48 overflow-y-auto">
+        <div className="absolute bottom-full left-4 mb-2 bg-white border border-surface-200 rounded-2xl shadow-soft z-50 w-72 max-h-52 overflow-y-auto animate-slide-up">
           {filteredMembers.map((member, index) => (
             <button
               type="button"
               key={member.id}
               onClick={() => handleMentionSelect(member)}
-              className={`w-full flex items-center gap-3 p-2 text-left hover:bg-gray-100 ${
-                index === mentionIndex ? 'bg-blue-50' : ''
-              }`}
+              className={clsx(
+                'w-full flex items-center gap-3 p-3 text-left transition-colors first:rounded-t-2xl last:rounded-b-2xl',
+                index === mentionIndex ? 'bg-primary-50' : 'hover:bg-surface-50'
+              )}
             >
-              <div className="w-8 h-8 rounded bg-gray-300 flex items-center justify-center text-sm font-medium flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
                 {member.avatarUrl ? (
                   <img
                     src={member.avatarUrl}
                     alt={member.displayName}
-                    className="w-full h-full rounded object-cover"
+                    className="w-full h-full rounded-xl object-cover"
                   />
                 ) : (
                   member.displayName.charAt(0).toUpperCase()
