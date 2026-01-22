@@ -4,15 +4,12 @@ import { Message, DMMessage } from '../types'
 class SocketService {
   private socket: Socket | null = null
   private listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map()
-  private token: string | null = null
   private activityInterval: ReturnType<typeof setInterval> | null = null
 
   connect(token: string) {
     if (this.socket?.connected) {
       return
     }
-
-    this.token = token
 
     this.socket = io(import.meta.env.VITE_SOCKET_URL || window.location.origin, {
       auth: { token },
@@ -63,7 +60,6 @@ class SocketService {
       this.socket.disconnect()
       this.socket = null
     }
-    this.token = null
   }
 
   private startActivityTracking() {
