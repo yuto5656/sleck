@@ -57,6 +57,16 @@ router.post(
         throw new AppError('Channel name already exists', 409, 'CONFLICT')
       }
 
+      // For public channels, add all workspace members automatically
+      let memberData: { userId: string }[] = [{ userId: req.userId! }]
+      if (!isPrivate) {
+        const workspaceMembers = await prisma.workspaceMember.findMany({
+          where: { workspaceId: req.params.workspaceId },
+          select: { userId: true },
+        })
+        memberData = workspaceMembers.map(m => ({ userId: m.userId }))
+      }
+
       const channel = await prisma.channel.create({
         data: {
           name,
@@ -65,12 +75,22 @@ router.post(
           workspaceId: req.params.workspaceId,
           createdById: req.userId!,
           members: {
-            create: {
-              userId: req.userId!,
-            },
+            create: memberData,
           },
         },
       })
+
+      // Emit socket event for new channel (only for public channels)
+      if (!isPrivate) {
+        io.to(`workspace:${req.params.workspaceId}`).emit('channel:created', {
+          id: channel.id,
+          name: channel.name,
+          description: channel.description,
+          isPrivate: channel.isPrivate,
+          memberCount: memberData.length,
+          createdAt: channel.createdAt,
+        })
+      }
 
       res.status(201).json(channel)
     } catch (error) {
@@ -236,6 +256,11 @@ router.delete('/:channelId', authenticate, async (req: AuthRequest, res: Respons
 
     await prisma.channel.delete({
       where: { id: req.params.channelId },
+    })
+
+    // Emit socket event for deleted channel
+    io.to(`workspace:${channel.workspaceId}`).emit('channel:deleted', {
+      channelId: req.params.channelId,
     })
 
     res.status(204).send()

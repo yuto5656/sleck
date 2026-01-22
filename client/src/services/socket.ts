@@ -152,6 +152,15 @@ class SocketService {
   onUserStatus(callback: (data: { userId: string; status: string }) => void) {
     return this.on('user:status', callback)
   }
+
+  // Channel listeners
+  onChannelCreated(callback: (channel: { id: string; name: string; description: string | null; isPrivate: boolean; memberCount: number; createdAt: string }) => void) {
+    return this.on('channel:created', callback)
+  }
+
+  onChannelDeleted(callback: (data: { channelId: string }) => void) {
+    return this.on('channel:deleted', callback)
+  }
 }
 
 export const socketService = new SocketService()

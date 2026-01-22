@@ -11,7 +11,7 @@ import { Message, DMMessage } from '../types'
 
 export default function Layout() {
   const { user, loadUser } = useAuthStore()
-  const { loadWorkspaces } = useWorkspaceStore()
+  const { loadWorkspaces, initSocketListeners } = useWorkspaceStore()
   const { loadDMs } = useDMStore()
   const { markChannelUnread, markDMUnread } = useUnreadStore()
   const location = useLocation()
@@ -24,6 +24,12 @@ export default function Layout() {
       loadDMs(),
     ])
   }, [loadUser, loadWorkspaces, loadDMs])
+
+  // Initialize socket listeners for workspace events
+  useEffect(() => {
+    const cleanup = initSocketListeners()
+    return cleanup
+  }, [initSocketListeners])
 
   // Listen for new messages and mark channels/DMs as unread
   useEffect(() => {

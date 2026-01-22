@@ -22,11 +22,14 @@ interface WorkspaceState {
   deleteChannel: (channelId: string) => Promise<void>
   joinChannel: (channelId: string) => Promise<void>
   leaveChannel: (channelId: string) => Promise<void>
+  addChannel: (channel: Channel) => void
+  removeChannel: (channelId: string) => void
 
   loadMembers: (workspaceId: string) => Promise<void>
   searchMembers: (workspaceId: string, search: string) => Promise<WorkspaceMember[]>
 
   clearError: () => void
+  initSocketListeners: () => () => void
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
@@ -211,5 +214,40 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }
   },
 
+  addChannel: (channel) => {
+    set((state) => {
+      // Check if channel already exists
+      if (state.channels.some(c => c.id === channel.id)) {
+        return state
+      }
+      return { channels: [...state.channels, channel] }
+    })
+  },
+
+  removeChannel: (channelId) => {
+    set((state) => ({
+      channels: state.channels.filter((c) => c.id !== channelId),
+      currentChannel: state.currentChannel?.id === channelId ? null : state.currentChannel,
+    }))
+  },
+
   clearError: () => set({ error: null }),
+
+  initSocketListeners: () => {
+    const cleanupCreated = socketService.onChannelCreated((channel) => {
+      get().addChannel({
+        ...channel,
+        lastReadAt: undefined,
+      })
+    })
+
+    const cleanupDeleted = socketService.onChannelDeleted(({ channelId }) => {
+      get().removeChannel(channelId)
+    })
+
+    return () => {
+      cleanupCreated()
+      cleanupDeleted()
+    }
+  },
 }))

@@ -494,11 +494,11 @@ router.post(
         throw new AppError('You are already a member of this workspace', 400, 'ALREADY_MEMBER')
       }
 
-      // Add user to workspace and general channel
-      const generalChannel = await prisma.channel.findFirst({
+      // Add user to workspace and all public channels
+      const publicChannels = await prisma.channel.findMany({
         where: {
           workspaceId: invite.workspaceId,
-          name: 'general',
+          isPrivate: false,
         },
       })
 
@@ -510,16 +510,14 @@ router.post(
             role: 'member',
           },
         }),
-        ...(generalChannel
-          ? [
-              prisma.channelMember.create({
-                data: {
-                  userId: req.userId!,
-                  channelId: generalChannel.id,
-                },
-              }),
-            ]
-          : []),
+        ...publicChannels.map(channel =>
+          prisma.channelMember.create({
+            data: {
+              userId: req.userId!,
+              channelId: channel.id,
+            },
+          })
+        ),
       ])
 
       res.json({
