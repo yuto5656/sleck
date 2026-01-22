@@ -5,6 +5,7 @@ import { userApi } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
 import { getStatusColor } from '../utils/statusColors'
 import { getErrorMessage } from '../utils/errorUtils'
+import { getAvatarUrl } from '../utils/avatarUrl'
 import { useToast } from './Toast'
 import { useConfirmDialog } from './ConfirmDialog'
 import { UserRole } from '../types'
@@ -141,9 +142,9 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {user.avatarUrl ? (
+                        {getAvatarUrl(user.avatarUrl) ? (
                           <img
-                            src={user.avatarUrl}
+                            src={getAvatarUrl(user.avatarUrl)!}
                             alt={user.displayName}
                             className="w-full h-full rounded-full object-cover"
                           />

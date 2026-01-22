@@ -5,6 +5,7 @@ import clsx from 'clsx'
 import { useThreadStore } from '../stores/threadStore'
 import { useAuthStore } from '../stores/authStore'
 import { socketService } from '../services/socket'
+import { getAvatarUrl } from '../utils/avatarUrl'
 import { Message } from '../types'
 
 // Convert text with newlines to React nodes with <br /> elements
@@ -131,9 +132,9 @@ export default function ThreadPanel({ channelId }: ThreadPanelProps) {
       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <div className="flex gap-3">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-400 to-accent-500 flex-shrink-0 flex items-center justify-center text-sm font-medium text-white">
-            {parentMessage.user.avatarUrl ? (
+            {getAvatarUrl(parentMessage.user.avatarUrl) ? (
               <img
-                src={parentMessage.user.avatarUrl}
+                src={getAvatarUrl(parentMessage.user.avatarUrl)!}
                 alt={parentMessage.user.displayName}
                 className="w-full h-full rounded-lg object-cover"
               />
@@ -174,9 +175,9 @@ export default function ThreadPanel({ channelId }: ThreadPanelProps) {
             {replies.map((reply) => (
               <div key={reply.id} className="flex gap-3">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-400 to-gray-500 flex-shrink-0 flex items-center justify-center text-xs font-medium text-white">
-                  {reply.user.avatarUrl ? (
+                  {getAvatarUrl(reply.user.avatarUrl) ? (
                     <img
-                      src={reply.user.avatarUrl}
+                      src={getAvatarUrl(reply.user.avatarUrl)!}
                       alt={reply.user.displayName}
                       className="w-full h-full rounded-lg object-cover"
                     />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Search, Hash, User, FileText, MessageSquare } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { searchApi } from '../services/api'
+import { getAvatarUrl } from '../utils/avatarUrl'
 
 interface SearchModalProps {
   onClose: () => void
@@ -197,9 +198,9 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                         className="flex items-center gap-3 p-3 rounded border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
                         <div className="w-10 h-10 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
-                          {user.avatarUrl ? (
+                          {getAvatarUrl(user.avatarUrl) ? (
                             <img
-                              src={user.avatarUrl}
+                              src={getAvatarUrl(user.avatarUrl)!}
                               alt={user.displayName}
                               className="w-full h-full rounded object-cover"
                             />

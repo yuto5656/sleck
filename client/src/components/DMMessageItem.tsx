@@ -9,6 +9,7 @@ import { useConfirmDialog } from './ConfirmDialog'
 import { useToast } from './Toast'
 import { getErrorMessage } from '../utils/errorUtils'
 import { formatMentions } from '../utils/mentionUtils'
+import { getAvatarUrl } from '../utils/avatarUrl'
 import EmojiPicker from 'emoji-picker-react'
 
 interface DMMessageItemProps {
@@ -91,9 +92,9 @@ const DMMessageItem = memo(function DMMessageItem({ message, showHeader, isOwn, 
       <div className="flex gap-2">
         {showHeader ? (
           <div className="w-9 h-9 rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
-            {message.sender.avatarUrl ? (
+            {getAvatarUrl(message.sender.avatarUrl) ? (
               <img
-                src={message.sender.avatarUrl}
+                src={getAvatarUrl(message.sender.avatarUrl)!}
                 alt={message.sender.displayName}
                 className="w-full h-full rounded object-cover"
               />

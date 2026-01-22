@@ -4,6 +4,7 @@ import { channelApi, workspaceApi } from '../services/api'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { getStatusColor } from '../utils/statusColors'
 import { getErrorMessage } from '../utils/errorUtils'
+import { getAvatarUrl } from '../utils/avatarUrl'
 import { useToast } from './Toast'
 import { UserRole } from '../types'
 
@@ -167,9 +168,9 @@ export default function MembersPanel({ channelId, onClose, initialShowInvite = f
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-10 h-10 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {member.avatarUrl ? (
+                        {getAvatarUrl(member.avatarUrl) ? (
                           <img
-                            src={member.avatarUrl}
+                            src={getAvatarUrl(member.avatarUrl)!}
                             alt={member.displayName}
                             className="w-full h-full rounded object-cover"
                           />
@@ -228,9 +229,9 @@ export default function MembersPanel({ channelId, onClose, initialShowInvite = f
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-10 h-10 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {member.avatarUrl ? (
+                        {getAvatarUrl(member.avatarUrl) ? (
                           <img
-                            src={member.avatarUrl}
+                            src={getAvatarUrl(member.avatarUrl)!}
                             alt={member.displayName}
                             className="w-full h-full rounded object-cover"
                           />

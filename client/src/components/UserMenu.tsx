@@ -3,6 +3,7 @@ import { LogOut, Settings, User, Moon, Sun, Circle } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useThemeStore } from '../stores/themeStore'
 import { getStatusColor } from '../utils/statusColors'
+import { getAvatarUrl } from '../utils/avatarUrl'
 import ProfileModal from './ProfileModal'
 import SettingsModal from './SettingsModal'
 
@@ -74,10 +75,10 @@ export default function UserMenu({ onClose, triggerSelector }: UserMenuProps) {
         <div className="p-4 border-b dark:border-gray-700">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-lg font-medium text-white">
-              {user?.avatarUrl ? (
+              {getAvatarUrl(user?.avatarUrl) ? (
                 <img
-                  src={user.avatarUrl}
-                  alt={user.displayName}
+                  src={getAvatarUrl(user?.avatarUrl)!}
+                  alt={user?.displayName}
                   className="w-full h-full rounded object-cover"
                 />
               ) : (

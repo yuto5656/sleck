@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore'
 import { userApi } from '../services/api'
 import { useToast } from './Toast'
 import { getErrorMessage } from '../utils/errorUtils'
+import { getAvatarUrl } from '../utils/avatarUrl'
 
 interface ProfileModalProps {
   onClose: () => void
@@ -95,10 +96,10 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
               <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-3xl font-bold text-white overflow-hidden">
                 {isUploadingAvatar ? (
                   <Loader2 className="w-8 h-8 animate-spin" />
-                ) : user?.avatarUrl ? (
+                ) : getAvatarUrl(user?.avatarUrl) ? (
                   <img
-                    src={user.avatarUrl}
-                    alt={user.displayName}
+                    src={getAvatarUrl(user?.avatarUrl)!}
+                    alt={user?.displayName}
                     className="w-full h-full rounded-2xl object-cover"
                   />
                 ) : (

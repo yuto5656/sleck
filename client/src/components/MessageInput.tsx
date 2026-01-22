@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import { fileApi } from '../services/api'
 import { socketService } from '../services/socket'
 import { useWorkspaceStore } from '../stores/workspaceStore'
+import { getAvatarUrl } from '../utils/avatarUrl'
 
 interface MentionMember {
   id: string
@@ -321,9 +322,9 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
               )}
             >
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
-                {member.avatarUrl ? (
+                {getAvatarUrl(member.avatarUrl) ? (
                   <img
-                    src={member.avatarUrl}
+                    src={getAvatarUrl(member.avatarUrl)!}
                     alt={member.displayName}
                     className="w-full h-full rounded-xl object-cover"
                   />

@@ -7,6 +7,7 @@ import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useDMStore } from '../stores/dmStore'
 import { useAuthStore } from '../stores/authStore'
 import { getStatusColor } from '../utils/statusColors'
+import { getAvatarUrl } from '../utils/avatarUrl'
 
 interface NewDMModalProps {
   onClose: () => void
@@ -94,9 +95,9 @@ export default function NewDMModal({ onClose }: NewDMModalProps) {
                   >
                     <div className="relative">
                       <div className="w-10 h-10 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
-                        {member.avatarUrl ? (
+                        {getAvatarUrl(member.avatarUrl) ? (
                           <img
-                            src={member.avatarUrl}
+                            src={getAvatarUrl(member.avatarUrl)!}
                             alt={member.displayName}
                             className="w-full h-full rounded object-cover"
                           />

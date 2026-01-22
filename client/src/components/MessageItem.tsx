@@ -10,6 +10,7 @@ import { useConfirmDialog } from './ConfirmDialog'
 import { useToast } from './Toast'
 import { getErrorMessage } from '../utils/errorUtils'
 import { formatMentions } from '../utils/mentionUtils'
+import { getAvatarUrl } from '../utils/avatarUrl'
 import EmojiPicker from 'emoji-picker-react'
 
 interface MessageItemProps {
@@ -109,9 +110,9 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
       <div className="flex gap-2">
         {showHeader ? (
           <div className="w-9 h-9 rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
-            {message.user.avatarUrl ? (
+            {getAvatarUrl(message.user.avatarUrl) ? (
               <img
-                src={message.user.avatarUrl}
+                src={getAvatarUrl(message.user.avatarUrl)!}
                 alt={message.user.displayName}
                 className="w-full h-full rounded object-cover"
               />

@@ -6,6 +6,7 @@ import { useDMStore } from '../stores/dmStore'
 import { socketService } from '../services/socket'
 import { useAuthStore } from '../stores/authStore'
 import { getStatusColor } from '../utils/statusColors'
+import { getAvatarUrl } from '../utils/avatarUrl'
 import { formatDateDivider, shouldShowDateDivider, shouldShowMessageHeader } from '../utils/dateUtils'
 import MessageInput from '../components/MessageInput'
 import DMMessageItem from '../components/DMMessageItem'
@@ -138,9 +139,9 @@ export default function DMPage() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-sm font-semibold text-white">
-              {currentDM.participant.avatarUrl ? (
+              {getAvatarUrl(currentDM.participant.avatarUrl) ? (
                 <img
-                  src={currentDM.participant.avatarUrl}
+                  src={getAvatarUrl(currentDM.participant.avatarUrl)!}
                   alt={currentDM.participant.displayName}
                   className="w-full h-full rounded-xl object-cover"
                 />
