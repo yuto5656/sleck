@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { Message } from '../types'
 import { messageApi } from '../services/api'
+import { messageCache } from '../services/messageCache'
 
 interface UserInfo {
   id: string
@@ -43,11 +44,33 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
   error: null,
 
   openThread: async (message: Message) => {
+    // Immediately show the parent message (optimistic UI)
     set({ parentMessage: message, replies: [], isLoading: true, error: null })
 
+    // Try to load from cache first for instant display
+    const cachedReplies = await messageCache.getThreadReplies(message.id)
+    if (cachedReplies) {
+      // Show cached replies immediately, then refresh in background
+      set({ replies: cachedReplies, isLoading: false })
+
+      // Refresh from API in background (don't await)
+      messageApi.getThread(message.id).then((response) => {
+        const freshReplies = response.data.replies || []
+        set({ replies: freshReplies })
+        messageCache.setThreadReplies(message.id, freshReplies)
+      }).catch(() => {
+        // Silently fail - we already have cached data
+      })
+      return
+    }
+
+    // No cache - fetch from API
     try {
       const response = await messageApi.getThread(message.id)
-      set({ replies: response.data.replies || [], isLoading: false })
+      const replies = response.data.replies || []
+      set({ replies, isLoading: false })
+      // Cache the replies for next time
+      messageCache.setThreadReplies(message.id, replies)
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       set({
@@ -111,19 +134,34 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
     // Check if already exists
     if (replies.some((r) => r.id === message.id)) return
 
-    set((state) => ({ replies: [...state.replies, message] }))
+    const newReplies = [...replies, message]
+    set({ replies: newReplies })
+    // Update cache
+    messageCache.setThreadReplies(parentMessage.id, newReplies)
   },
 
   updateReply: (message: Message) => {
-    set((state) => ({
-      replies: state.replies.map((r) => (r.id === message.id ? { ...r, ...message } : r)),
-    }))
+    const { parentMessage } = get()
+    set((state) => {
+      const newReplies = state.replies.map((r) => (r.id === message.id ? { ...r, ...message } : r))
+      // Update cache
+      if (parentMessage) {
+        messageCache.setThreadReplies(parentMessage.id, newReplies)
+      }
+      return { replies: newReplies }
+    })
   },
 
   removeReply: (messageId: string) => {
-    set((state) => ({
-      replies: state.replies.filter((r) => r.id !== messageId),
-    }))
+    const { parentMessage } = get()
+    set((state) => {
+      const newReplies = state.replies.filter((r) => r.id !== messageId)
+      // Update cache
+      if (parentMessage) {
+        messageCache.setThreadReplies(parentMessage.id, newReplies)
+      }
+      return { replies: newReplies }
+    })
   },
 
   incrementThreadCount: () => {

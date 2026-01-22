@@ -1,15 +1,23 @@
 import { Message, DMMessage } from '../types'
 
 const DB_NAME = 'sleck-cache'
-const DB_VERSION = 1
+const DB_VERSION = 2
 const CHANNEL_MESSAGES_STORE = 'channelMessages'
 const DM_MESSAGES_STORE = 'dmMessages'
+const THREAD_STORE = 'threads'
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours
+const THREAD_CACHE_EXPIRY = 5 * 60 * 1000 // 5 minutes for threads (shorter for freshness)
 
 interface CachedMessages<T> {
   id: string // channelId or dmId
   messages: T[]
   hasMore: boolean
+  cachedAt: number
+}
+
+interface CachedThread {
+  id: string // parent message id
+  replies: Message[]
   cachedAt: number
 }
 
@@ -43,6 +51,10 @@ class MessageCacheService {
 
         if (!db.objectStoreNames.contains(DM_MESSAGES_STORE)) {
           db.createObjectStore(DM_MESSAGES_STORE, { keyPath: 'id' })
+        }
+
+        if (!db.objectStoreNames.contains(THREAD_STORE)) {
+          db.createObjectStore(THREAD_STORE, { keyPath: 'id' })
         }
       }
     })
@@ -203,9 +215,83 @@ class MessageCacheService {
 
     return new Promise((resolve) => {
       try {
-        const transaction = this.db!.transaction([CHANNEL_MESSAGES_STORE, DM_MESSAGES_STORE], 'readwrite')
+        const transaction = this.db!.transaction([CHANNEL_MESSAGES_STORE, DM_MESSAGES_STORE, THREAD_STORE], 'readwrite')
         transaction.objectStore(CHANNEL_MESSAGES_STORE).clear()
         transaction.objectStore(DM_MESSAGES_STORE).clear()
+        transaction.objectStore(THREAD_STORE).clear()
+        transaction.oncomplete = () => resolve()
+        transaction.onerror = () => resolve()
+      } catch {
+        resolve()
+      }
+    })
+  }
+
+  async getThreadReplies(parentId: string): Promise<Message[] | null> {
+    await this.init()
+    if (!this.db) return null
+
+    return new Promise((resolve) => {
+      try {
+        const transaction = this.db!.transaction(THREAD_STORE, 'readonly')
+        const store = transaction.objectStore(THREAD_STORE)
+        const request = store.get(parentId)
+
+        request.onsuccess = () => {
+          const cached = request.result as CachedThread | undefined
+          if (!cached) {
+            resolve(null)
+            return
+          }
+
+          // Check if cache is expired (shorter expiry for threads)
+          if (Date.now() - cached.cachedAt > THREAD_CACHE_EXPIRY) {
+            this.deleteThreadReplies(parentId)
+            resolve(null)
+            return
+          }
+
+          resolve(cached.replies)
+        }
+
+        request.onerror = () => resolve(null)
+      } catch {
+        resolve(null)
+      }
+    })
+  }
+
+  async setThreadReplies(parentId: string, replies: Message[]): Promise<void> {
+    await this.init()
+    if (!this.db) return
+
+    return new Promise((resolve) => {
+      try {
+        const transaction = this.db!.transaction(THREAD_STORE, 'readwrite')
+        const store = transaction.objectStore(THREAD_STORE)
+        const data: CachedThread = {
+          id: parentId,
+          replies,
+          cachedAt: Date.now(),
+        }
+        store.put(data)
+        transaction.oncomplete = () => resolve()
+        transaction.onerror = () => resolve()
+      } catch {
+        resolve()
+      }
+    })
+  }
+
+  async deleteThreadReplies(parentId: string): Promise<void> {
+    await this.init()
+    if (!this.db) return
+
+    return new Promise((resolve) => {
+      try {
+        const transaction = this.db!.transaction(THREAD_STORE, 'readwrite')
+        const store = transaction.objectStore(THREAD_STORE)
+        store.delete(parentId)
         transaction.oncomplete = () => resolve()
         transaction.onerror = () => resolve()
       } catch {
