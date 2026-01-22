@@ -48,7 +48,7 @@ function arePropsEqual(prevProps: MessageItemProps, nextProps: MessageItemProps)
 const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOpenThread, onUserClick }: MessageItemProps) {
   const { user } = useAuthStore()
   const { members } = useWorkspaceStore()
-  const { addReaction, removeReaction, editMessage, deleteMessage } = useMessageStore()
+  const { addReaction, removeReaction, editMessage, deleteMessage, isReactionPending } = useMessageStore()
 
   // Get valid user names for mention validation
   const validUserNames = members.map(m => m.displayName)
@@ -71,6 +71,9 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
 
   const handleReactionClick = (emoji: string) => {
     if (!user) return
+    // Prevent spam clicks
+    if (isReactionPending(message.id, emoji)) return
+
     const hasReacted = message.reactions.find(
       (r) => r.emoji === emoji && r.users.includes(user.id)
     )
@@ -84,6 +87,9 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
 
   const handleEmojiSelect = (emojiData: { emoji: string }) => {
     if (!user) return
+    // Prevent spam clicks
+    if (isReactionPending(message.id, emojiData.emoji)) return
+
     addReaction(message.id, emojiData.emoji, user.id)
     setShowEmojiPicker(false)
   }
@@ -249,23 +255,28 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
           {/* Reactions */}
           {message.reactions.length > 0 && (
             <div className="mt-1 flex flex-wrap gap-1">
-              {message.reactions.map((reaction) => (
-                <button
-                  type="button"
-                  key={reaction.emoji}
-                  onClick={() => handleReactionClick(reaction.emoji)}
-                  title={getReactionUserNames(reaction.users)}
-                  className={clsx(
-                    'flex items-center gap-1 px-2 py-0.5 rounded-full text-sm border',
-                    reaction.users.includes(user?.id || '')
-                      ? 'bg-blue-50 dark:bg-blue-900 border-blue-300 dark:border-blue-700'
-                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
-                  )}
-                >
-                  <span>{reaction.emoji}</span>
-                  <span className="text-xs text-gray-600 dark:text-gray-300">{reaction.count}</span>
-                </button>
-              ))}
+              {message.reactions.map((reaction) => {
+                const isPending = isReactionPending(message.id, reaction.emoji)
+                return (
+                  <button
+                    type="button"
+                    key={reaction.emoji}
+                    onClick={() => handleReactionClick(reaction.emoji)}
+                    disabled={isPending}
+                    title={getReactionUserNames(reaction.users)}
+                    className={clsx(
+                      'flex items-center gap-1 px-2 py-0.5 rounded-full text-sm border transition-opacity',
+                      isPending && 'opacity-50 cursor-not-allowed',
+                      reaction.users.includes(user?.id || '')
+                        ? 'bg-blue-50 dark:bg-blue-900 border-blue-300 dark:border-blue-700'
+                        : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    )}
+                  >
+                    <span>{reaction.emoji}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-300">{reaction.count}</span>
+                  </button>
+                )
+              })}
             </div>
           )}
 

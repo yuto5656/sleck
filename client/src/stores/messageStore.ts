@@ -16,6 +16,7 @@ interface MessageState {
   hasMore: Map<string, boolean>
   error: string | null
   pendingMessageIds: Set<string> // Track temp message IDs
+  pendingReactions: Set<string> // Track pending reaction requests (messageId:emoji)
 
   loadMessages: (channelId: string, before?: string) => Promise<void>
   sendMessage: (channelId: string, content: string, user: UserInfo, parentId?: string) => Promise<void>
@@ -23,6 +24,7 @@ interface MessageState {
   deleteMessage: (messageId: string) => Promise<void>
   addReaction: (messageId: string, emoji: string, userId: string) => Promise<void>
   removeReaction: (messageId: string, emoji: string, userId: string) => Promise<void>
+  isReactionPending: (messageId: string, emoji: string) => boolean
 
   // Real-time updates
   addMessage: (channelId: string, message: Message) => void
@@ -39,6 +41,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   hasMore: new Map(),
   error: null,
   pendingMessageIds: new Set(),
+  pendingReactions: new Set(),
 
   loadMessages: async (channelId, before) => {
     // If loading initial messages (no before cursor), try cache first
@@ -172,6 +175,18 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   },
 
   addReaction: async (messageId, emoji, userId) => {
+    const reactionKey = `${messageId}:${emoji}`
+
+    // Prevent duplicate requests (spam protection)
+    if (get().pendingReactions.has(reactionKey)) {
+      return
+    }
+
+    // Mark as pending
+    const pendingReactions = new Set(get().pendingReactions)
+    pendingReactions.add(reactionKey)
+    set({ pendingReactions })
+
     // Optimistic update - update UI immediately
     get().updateReaction(messageId, emoji, userId, 'add')
 
@@ -183,10 +198,27 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       get().updateReaction(messageId, emoji, userId, 'remove')
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       set({ error: err.response?.data?.error?.message || 'Failed to add reaction' })
+    } finally {
+      // Remove from pending
+      const updated = new Set(get().pendingReactions)
+      updated.delete(reactionKey)
+      set({ pendingReactions: updated })
     }
   },
 
   removeReaction: async (messageId, emoji, userId) => {
+    const reactionKey = `${messageId}:${emoji}`
+
+    // Prevent duplicate requests (spam protection)
+    if (get().pendingReactions.has(reactionKey)) {
+      return
+    }
+
+    // Mark as pending
+    const pendingReactions = new Set(get().pendingReactions)
+    pendingReactions.add(reactionKey)
+    set({ pendingReactions })
+
     // Optimistic update - update UI immediately
     get().updateReaction(messageId, emoji, userId, 'remove')
 
@@ -198,7 +230,16 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       get().updateReaction(messageId, emoji, userId, 'add')
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       set({ error: err.response?.data?.error?.message || 'Failed to remove reaction' })
+    } finally {
+      // Remove from pending
+      const updated = new Set(get().pendingReactions)
+      updated.delete(reactionKey)
+      set({ pendingReactions: updated })
     }
+  },
+
+  isReactionPending: (messageId, emoji) => {
+    return get().pendingReactions.has(`${messageId}:${emoji}`)
   },
 
   addMessage: (channelId, message) => {
