@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { format, isToday, isYesterday } from 'date-fns'
-import { ja } from 'date-fns/locale'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { Message } from '../types'
 import { useAuthStore } from '../stores/authStore'
+import { formatDateDivider, shouldShowDateDivider, shouldShowMessageHeader } from '../utils/dateUtils'
 import MessageItem from './MessageItem'
 
 interface MessageListProps {
@@ -23,7 +22,7 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore }
     }
   }, [messages, autoScroll])
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (!listRef.current) return
 
     const { scrollTop, scrollHeight, clientHeight } = listRef.current
@@ -35,31 +34,31 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore }
     if (scrollTop < 100 && hasMore && !isLoading) {
       onLoadMore()
     }
-  }
+  }, [hasMore, isLoading, onLoadMore])
 
-  const formatDateDivider = (date: string) => {
-    const d = new Date(date)
-    if (isToday(d)) return '今日'
-    if (isYesterday(d)) return '昨日'
-    return format(d, 'yyyy年M月d日', { locale: ja })
-  }
+  // Memoize date/time calculations to avoid creating Date objects on every render
+  const messageMetadata = useMemo(() => {
+    const metadata = new Map<string, { dateString: string; timestamp: number }>()
+    messages.forEach((msg) => {
+      const date = new Date(msg.createdAt)
+      metadata.set(msg.id, {
+        dateString: date.toDateString(),
+        timestamp: date.getTime(),
+      })
+    })
+    return metadata
+  }, [messages])
 
-  const shouldShowDateDivider = (current: Message, previous: Message | undefined) => {
-    if (!previous) return true
-    const currentDate = new Date(current.createdAt).toDateString()
-    const previousDate = new Date(previous.createdAt).toDateString()
-    return currentDate !== previousDate
-  }
-
-  const shouldShowHeader = (current: Message, previous: Message | undefined) => {
-    if (!previous) return true
-    if (previous.user.id !== current.user.id) return true
-
-    // Show header if more than 5 minutes apart
-    const currentTime = new Date(current.createdAt).getTime()
-    const previousTime = new Date(previous.createdAt).getTime()
-    return currentTime - previousTime > 5 * 60 * 1000
-  }
+  const getShowHeader = useCallback((current: Message, previous: Message | undefined) => {
+    const currentMeta = messageMetadata.get(current.id)
+    const previousMeta = previous ? messageMetadata.get(previous.id) : undefined
+    return shouldShowMessageHeader(
+      current.user.id,
+      currentMeta?.timestamp || 0,
+      previous?.user.id,
+      previousMeta?.timestamp
+    )
+  }, [messageMetadata])
 
   return (
     <div
@@ -73,8 +72,8 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore }
 
       {messages.map((message, index) => {
         const previous = messages[index - 1]
-        const showDateDivider = shouldShowDateDivider(message, previous)
-        const showHeader = shouldShowHeader(message, previous)
+        const showDateDivider = shouldShowDateDivider(message.createdAt, previous?.createdAt)
+        const showHeader = getShowHeader(message, previous)
 
         return (
           <div key={message.id}>

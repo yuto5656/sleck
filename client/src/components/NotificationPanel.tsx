@@ -5,6 +5,8 @@ import { format } from 'date-fns'
 import { useNotificationStore } from '../stores/notificationStore'
 import { notificationApi } from '../services/api'
 import { Notification } from '../types'
+import { useToast } from './Toast'
+import { getErrorMessage } from '../utils/errorUtils'
 
 interface NotificationPanelProps {
   onClose: () => void
@@ -13,6 +15,7 @@ interface NotificationPanelProps {
 export default function NotificationPanel({ onClose }: NotificationPanelProps) {
   const navigate = useNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
+  const toast = useToast()
   const { notifications, unreadCount, isLoading, loadNotifications, markAsRead, markAllAsRead } = useNotificationStore()
 
   useEffect(() => {
@@ -45,7 +48,7 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
       // Reload to update the list
       loadNotifications()
     } catch (error) {
-      console.error('Failed to delete notification:', error)
+      toast.error(getErrorMessage(error, '通知の削除に失敗しました'))
     }
   }
 

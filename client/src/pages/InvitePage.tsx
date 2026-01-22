@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { workspaceApi } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
+import { useToast } from '../components/Toast'
 
 interface WorkspaceInfo {
   id: string
@@ -12,12 +13,12 @@ interface WorkspaceInfo {
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
+  const toast = useToast()
   const { isAuthenticated } = useAuthStore()
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isJoining, setIsJoining] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     const fetchInviteInfo = async () => {
@@ -51,10 +52,8 @@ export default function InvitePage() {
 
     try {
       await workspaceApi.acceptInvite(token)
-      setSuccess(true)
-      setTimeout(() => {
-        navigate('/')
-      }, 2000)
+      toast.success(`${workspace?.name} に参加しました`)
+      navigate('/')
     } catch (err: unknown) {
       const error = err as { response?: { data?: { code?: string } } }
       if (error.response?.data?.code === 'ALREADY_MEMBER') {
@@ -84,20 +83,6 @@ export default function InvitePage() {
           <Link to="/login" className="text-slack-purple hover:underline">
             ログインページへ
           </Link>
-        </div>
-      </div>
-    )
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold text-slack-purple mb-4">Sleck</h1>
-          <div className="text-green-600 mb-4">
-            {workspace?.name} に参加しました！
-          </div>
-          <div className="text-gray-500">リダイレクト中...</div>
         </div>
       </div>
     )

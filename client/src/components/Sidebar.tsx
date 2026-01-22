@@ -4,6 +4,7 @@ import { Hash, Lock, Plus, ChevronDown, ChevronRight, MessageSquare, UserPlus } 
 import clsx from 'clsx'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useDMStore } from '../stores/dmStore'
+import { getStatusColor } from '../utils/statusColors'
 import CreateChannelModal from './CreateChannelModal'
 import InviteModal from './InviteModal'
 import NewDMModal from './NewDMModal'
@@ -30,15 +31,6 @@ export default function Sidebar() {
     setCurrentDM(dm)
     setCurrentChannel(null)
     navigate(`/dm/${dm.id}`)
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return 'bg-green-500'
-      case 'away': return 'bg-yellow-500'
-      case 'dnd': return 'bg-red-500'
-      default: return 'bg-gray-400'
-    }
   }
 
   return (

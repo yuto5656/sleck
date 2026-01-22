@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { format } from 'date-fns'
 import { Smile, MessageSquare, Edit2, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 import { Message } from '../types'
 import { useMessageStore } from '../stores/messageStore'
 import { useAuthStore } from '../stores/authStore'
+import { useConfirmDialog } from './ConfirmDialog'
+import { useToast } from './Toast'
+import { getErrorMessage } from '../utils/errorUtils'
 import EmojiPicker from 'emoji-picker-react'
 
 // Format message content with mention highlighting
@@ -54,9 +57,23 @@ interface MessageItemProps {
   isOwn: boolean
 }
 
-export default function MessageItem({ message, showHeader, isOwn }: MessageItemProps) {
+// Custom comparison function for React.memo
+function arePropsEqual(prevProps: MessageItemProps, nextProps: MessageItemProps) {
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.message.isEdited === nextProps.message.isEdited &&
+    prevProps.message.reactions.length === nextProps.message.reactions.length &&
+    prevProps.showHeader === nextProps.showHeader &&
+    prevProps.isOwn === nextProps.isOwn
+  )
+}
+
+const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: MessageItemProps) {
   const { user } = useAuthStore()
   const { addReaction, removeReaction, editMessage, deleteMessage } = useMessageStore()
+  const { showConfirm } = useConfirmDialog()
+  const toast = useToast()
   const [showActions, setShowActions] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -81,14 +98,32 @@ export default function MessageItem({ message, showHeader, isOwn }: MessageItemP
 
   const handleEdit = async () => {
     if (editContent.trim() && editContent !== message.content) {
-      await editMessage(message.id, editContent)
+      try {
+        await editMessage(message.id, editContent)
+      } catch (error) {
+        toast.error(getErrorMessage(error, 'メッセージの編集に失敗しました'))
+        return
+      }
     }
     setIsEditing(false)
   }
 
   const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this message?')) {
-      await deleteMessage(message.id)
+    const confirmed = await showConfirm({
+      title: 'メッセージを削除',
+      message: 'このメッセージを削除しますか？この操作は取り消せません。',
+      confirmText: '削除',
+      cancelText: 'キャンセル',
+      danger: true,
+    })
+
+    if (confirmed) {
+      try {
+        await deleteMessage(message.id)
+        toast.success('メッセージを削除しました')
+      } catch (error) {
+        toast.error(getErrorMessage(error, 'メッセージの削除に失敗しました'))
+      }
     }
   }
 
@@ -286,4 +321,6 @@ export default function MessageItem({ message, showHeader, isOwn }: MessageItemP
       )}
     </div>
   )
-}
+}, arePropsEqual)
+
+export default MessageItem

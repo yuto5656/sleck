@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
+import { ToastProvider } from './components/Toast'
+import { ConfirmDialogProvider } from './components/ConfirmDialog'
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -22,7 +24,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <Routes>
+    <ToastProvider>
+      <ConfirmDialogProvider>
+        <Routes>
       <Route
         path="/login"
         element={
@@ -68,6 +72,8 @@ export default function App() {
         <Route path="channel/:channelId" element={<ChannelPage />} />
         <Route path="dm/:dmId" element={<DMPage />} />
       </Route>
-    </Routes>
+        </Routes>
+      </ConfirmDialogProvider>
+    </ToastProvider>
   )
 }

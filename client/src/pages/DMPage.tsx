@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { Phone, Video, MoreVertical, Circle } from 'lucide-react'
 import clsx from 'clsx'
+import { format } from 'date-fns'
 import { useDMStore } from '../stores/dmStore'
 import { socketService } from '../services/socket'
-import MessageInput from '../components/MessageInput'
-import { format, isToday, isYesterday } from 'date-fns'
-import { ja } from 'date-fns/locale'
 import { useAuthStore } from '../stores/authStore'
+import { getStatusColor } from '../utils/statusColors'
+import { formatDateDivider, shouldShowDateDivider } from '../utils/dateUtils'
+import MessageInput from '../components/MessageInput'
 
 export default function DMPage() {
   const { dmId } = useParams<{ dmId: string }>()
   const { user } = useAuthStore()
   const { dms, currentDM, setCurrentDM, messages, isLoading, hasMore, loadMessages, sendMessage, addMessage } = useDMStore()
   const [isTyping, setIsTyping] = useState(false)
+  const [autoScroll, setAutoScroll] = useState(true)
+  const messagesRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (dmId) {
@@ -63,28 +66,32 @@ export default function DMPage() {
   const dmMessages = dmId ? messages.get(dmId) || [] : []
   const dmHasMore = dmId ? hasMore.get(dmId) || false : false
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return 'text-green-500'
-      case 'away': return 'text-yellow-500'
-      case 'dnd': return 'text-red-500'
-      default: return 'text-gray-400'
+  const handleLoadMore = useCallback(() => {
+    if (dmId && dmHasMore && !isLoading) {
+      const oldestMessage = dmMessages[0]
+      if (oldestMessage) {
+        loadMessages(dmId, oldestMessage.id)
+      }
     }
-  }
+  }, [dmId, dmHasMore, isLoading, dmMessages, loadMessages])
 
-  const formatDateDivider = (date: string) => {
-    const d = new Date(date)
-    if (isToday(d)) return '今日'
-    if (isYesterday(d)) return '昨日'
-    return format(d, 'yyyy年M月d日', { locale: ja })
-  }
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
+    setAutoScroll(isNearBottom)
 
-  const shouldShowDateDivider = (current: typeof dmMessages[0], previous: typeof dmMessages[0] | undefined) => {
-    if (!previous) return true
-    const currentDate = new Date(current.createdAt).toDateString()
-    const previousDate = new Date(previous.createdAt).toDateString()
-    return currentDate !== previousDate
-  }
+    // Load more when near top
+    if (scrollTop < 100 && dmHasMore && !isLoading) {
+      handleLoadMore()
+    }
+  }, [dmHasMore, isLoading, handleLoadMore])
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (autoScroll && messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight
+    }
+  }, [dmMessages, autoScroll])
 
   if (!currentDM) {
     return (
@@ -114,7 +121,7 @@ export default function DMPage() {
             <Circle
               className={clsx(
                 'absolute -bottom-0.5 -right-0.5 w-3 h-3 fill-current',
-                getStatusColor(currentDM.participant.status)
+                getStatusColor(currentDM.participant.status, 'text')
               )}
             />
           </div>
@@ -137,14 +144,14 @@ export default function DMPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-2">
+      <div ref={messagesRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-2">
         {isLoading && dmHasMore && (
           <div className="text-center py-2 text-gray-500">メッセージを読み込み中...</div>
         )}
 
         {dmMessages.map((message, index) => {
           const previous = dmMessages[index - 1]
-          const showDateDivider = shouldShowDateDivider(message, previous)
+          const showDateDivider = shouldShowDateDivider(message.createdAt, previous?.createdAt)
           const isOwn = message.sender.id === user?.id
 
           return (

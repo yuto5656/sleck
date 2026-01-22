@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { LogOut, Settings, User, Moon, Circle } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
+import { getStatusColor } from '../utils/statusColors'
 
 interface UserMenuProps {
   onClose: () => void
@@ -31,15 +32,6 @@ export default function UserMenu({ onClose }: UserMenuProps) {
     onClose()
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return 'text-green-500'
-      case 'away': return 'text-yellow-500'
-      case 'dnd': return 'text-red-500'
-      default: return 'text-gray-400'
-    }
-  }
-
   return (
     <div
       ref={menuRef}
@@ -62,7 +54,7 @@ export default function UserMenu({ onClose }: UserMenuProps) {
           <div>
             <p className="font-bold text-gray-900">{user?.displayName}</p>
             <p className="text-sm text-gray-500 capitalize flex items-center gap-1">
-              <Circle className={`w-2 h-2 fill-current ${getStatusColor(user?.status || 'offline')}`} />
+              <Circle className={`w-2 h-2 fill-current ${getStatusColor(user?.status || 'offline', 'text')}`} />
               {user?.status}
             </p>
           </div>

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Search } from 'lucide-react'
+import clsx from 'clsx'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useDMStore } from '../stores/dmStore'
 import { useAuthStore } from '../stores/authStore'
-import clsx from 'clsx'
+import { getStatusColor } from '../utils/statusColors'
 
 interface NewDMModalProps {
   onClose: () => void
@@ -25,19 +26,6 @@ export default function NewDMModal({ onClose }: NewDMModalProps) {
       member.id !== user?.id &&
       member.displayName.toLowerCase().includes(search.toLowerCase())
   )
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online':
-        return 'bg-green-500'
-      case 'away':
-        return 'bg-yellow-500'
-      case 'dnd':
-        return 'bg-red-500'
-      default:
-        return 'bg-gray-400'
-    }
-  }
 
   const handleSelectMember = async (memberId: string) => {
     setIsCreating(true)
