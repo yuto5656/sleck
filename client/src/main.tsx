@@ -6,15 +6,24 @@ import App from './App'
 import './index.css'
 
 // Register service worker with auto-reload on update
-registerSW({
+const updateSW = registerSW({
   onNeedRefresh() {
-    // New content is available, reload to apply
+    // New content is available, prompt user to update
     if (confirm('新しいバージョンが利用可能です。更新しますか？')) {
-      window.location.reload()
+      updateSW(true) // true = force reload after update
     }
   },
   onOfflineReady() {
     console.log('App ready for offline use')
+  },
+  onRegisteredSW(swUrl, registration) {
+    // Check for updates every 1 hour
+    if (registration) {
+      setInterval(() => {
+        registration.update()
+      }, 60 * 60 * 1000)
+    }
+    console.log('Service Worker registered:', swUrl)
   },
 })
 
