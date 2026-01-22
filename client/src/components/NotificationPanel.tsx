@@ -17,7 +17,10 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
 
   useEffect(() => {
     loadNotifications()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         onClose()
@@ -26,7 +29,7 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [onClose, loadNotifications])
+  }, [onClose])
 
   const handleMarkAsRead = async (id: string) => {
     await markAsRead(id)
