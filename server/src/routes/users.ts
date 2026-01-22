@@ -277,4 +277,86 @@ router.patch(
   }
 )
 
+// Delete user (admin only)
+router.delete('/:userId', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    // Check if requester is admin
+    const requester = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { role: true },
+    })
+
+    if (!requester || requester.role !== 'admin') {
+      throw new AppError('管理者のみがユーザーを削除できます', 403, 'FORBIDDEN')
+    }
+
+    // Prevent deleting self
+    if (req.params.userId === req.userId) {
+      throw new AppError('自分自身は削除できません', 400, 'VALIDATION_ERROR')
+    }
+
+    // Check target user exists
+    const targetUser = await prisma.user.findUnique({
+      where: { id: req.params.userId },
+      select: { role: true },
+    })
+
+    if (!targetUser) {
+      throw new AppError('ユーザーが見つかりません', 404, 'NOT_FOUND')
+    }
+
+    // Prevent deleting admin
+    if (targetUser.role === 'admin') {
+      throw new AppError('管理者は削除できません', 400, 'VALIDATION_ERROR')
+    }
+
+    // Delete user and all related data using transaction
+    await prisma.$transaction(async (tx) => {
+      // Delete user's messages
+      await tx.message.deleteMany({
+        where: { userId: req.params.userId },
+      })
+
+      // Delete user's DM messages
+      await tx.dMMessage.deleteMany({
+        where: { senderId: req.params.userId },
+      })
+
+      // Delete user's reactions
+      await tx.reaction.deleteMany({
+        where: { userId: req.params.userId },
+      })
+
+      // Delete user's channel memberships
+      await tx.channelMember.deleteMany({
+        where: { userId: req.params.userId },
+      })
+
+      // Delete user's workspace memberships
+      await tx.workspaceMember.deleteMany({
+        where: { userId: req.params.userId },
+      })
+
+      // Delete user's DM participations
+      await tx.dMParticipant.deleteMany({
+        where: { userId: req.params.userId },
+      })
+
+      // Delete user's notifications
+      await tx.notification.deleteMany({
+        where: { userId: req.params.userId },
+      })
+
+      // Finally delete the user
+      await tx.user.delete({
+        where: { id: req.params.userId },
+      })
+    })
+
+    res.status(204).send()
+  } catch (error) {
+    next(error)
+  }
+})
+
 export default router

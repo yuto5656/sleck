@@ -126,6 +126,7 @@ export const userApi = {
   getAllUsers: () => api.get('/users'),
   updateRole: (userId: string, role: 'deputy_admin' | 'member') =>
     api.patch(`/users/${userId}/role`, { role }),
+  deleteUser: (userId: string) => api.delete(`/users/${userId}`),
 }
 
 // Workspace API

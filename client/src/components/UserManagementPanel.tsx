@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { X, Shield, ShieldCheck, User as UserIcon } from 'lucide-react'
+import { X, Shield, ShieldCheck, User as UserIcon, Trash2 } from 'lucide-react'
 import { userApi } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
 import { getStatusColor } from '../utils/statusColors'
 import { getErrorMessage } from '../utils/errorUtils'
 import { useToast } from './Toast'
+import { useConfirmDialog } from './ConfirmDialog'
 import { UserRole } from '../types'
 
 interface UserData {
@@ -36,10 +37,12 @@ const roleIcons: Record<UserRole, React.ReactNode> = {
 export default function UserManagementPanel({ onClose }: UserManagementPanelProps) {
   const { user: currentUser } = useAuthStore()
   const toast = useToast()
+  const { showConfirm } = useConfirmDialog()
   const [users, setUsers] = useState<UserData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
 
   const loadUsers = async () => {
     setIsLoading(true)
@@ -68,6 +71,29 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
       toast.error(getErrorMessage(err, 'ロールの変更に失敗しました'))
     } finally {
       setUpdatingUserId(null)
+    }
+  }
+
+  const handleDeleteUser = async (user: UserData) => {
+    const confirmed = await showConfirm({
+      title: 'ユーザーを削除',
+      message: `「${user.displayName}」を削除しますか？このユーザーのメッセージやデータも全て削除されます。この操作は取り消せません。`,
+      confirmText: '削除',
+      cancelText: 'キャンセル',
+      danger: true,
+    })
+
+    if (!confirmed) return
+
+    setDeletingUserId(user.id)
+    try {
+      await userApi.deleteUser(user.id)
+      setUsers(users.filter(u => u.id !== user.id))
+      toast.success('ユーザーを削除しました')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'ユーザーの削除に失敗しました'))
+    } finally {
+      setDeletingUserId(null)
     }
   }
 
@@ -143,15 +169,26 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
                         {roleLabels[user.role]}
                       </span>
                     ) : (
-                      <select
-                        value={user.role}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value as 'deputy_admin' | 'member')}
-                        disabled={updatingUserId === user.id}
-                        className="px-3 py-1 text-sm border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-                      >
-                        <option value="deputy_admin">代理管理者</option>
-                        <option value="member">一般</option>
-                      </select>
+                      <>
+                        <select
+                          value={user.role}
+                          onChange={(e) => handleRoleChange(user.id, e.target.value as 'deputy_admin' | 'member')}
+                          disabled={updatingUserId === user.id || deletingUserId === user.id}
+                          className="px-3 py-1 text-sm border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
+                        >
+                          <option value="deputy_admin">代理管理者</option>
+                          <option value="member">一般</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(user)}
+                          disabled={deletingUserId === user.id}
+                          className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg disabled:opacity-50 transition-colors"
+                          title="ユーザーを削除"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
