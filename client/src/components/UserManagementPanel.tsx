@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Shield, ShieldCheck, User as UserIcon, Trash2 } from 'lucide-react'
 import { userApi } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
@@ -102,9 +103,9 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
     return null
   }
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col mx-4">
         <div className="h-14 border-b dark:border-gray-700 flex items-center justify-between px-6">
           <h2 className="font-bold text-lg text-gray-900 dark:text-white">ユーザー管理</h2>
           <button
@@ -216,4 +217,6 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }
