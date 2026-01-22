@@ -42,3 +42,6 @@ server/uploads/*
 *.tgz
 .cache/
 .vercel
+
+# Claude Code
+.claude/
