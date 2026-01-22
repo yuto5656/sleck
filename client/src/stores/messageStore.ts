@@ -126,13 +126,8 @@ export const useMessageStore = create<MessageState>((set, get) => ({
 
     try {
       await messageApi.sendMessage(channelId, { content, parentId })
-      // Remove temp message - socket event will add the real message
-      if (!parentId) {
-        const updatedMessages = new Map(get().messages)
-        const currentMessages = updatedMessages.get(channelId) || []
-        updatedMessages.set(channelId, currentMessages.filter(m => m.id !== tempId))
-        set({ messages: updatedMessages })
-      }
+      // Don't remove temp message here - let addMessage handle the replacement
+      // This prevents flickering between temp removal and socket event arrival
       const updatedPendingIds = new Set(get().pendingMessageIds)
       updatedPendingIds.delete(tempId)
       set({ pendingMessageIds: updatedPendingIds })
@@ -206,22 +201,21 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       return
     }
 
-    // Check for pending temp messages with same content from same user (avoid duplicates during optimistic update)
-    // This handles the race condition where socket event arrives before API response
-    const hasPendingDuplicate = channelMessages.some(
+    // Find temp message with same content from same user (optimistic update replacement)
+    const tempIndex = channelMessages.findIndex(
       (m) =>
         m.id.startsWith('temp-') &&
         m.content === message.content &&
         m.user.id === message.user.id
     )
 
-    if (hasPendingDuplicate) {
-      // Replace temp message with real message
-      const filteredMessages = channelMessages.filter(
-        (m) => !(m.id.startsWith('temp-') && m.content === message.content && m.user.id === message.user.id)
-      )
-      messages.set(channelId, [...filteredMessages, message])
+    if (tempIndex !== -1) {
+      // Replace temp message in place (preserves position, no flicker)
+      const newMessages = [...channelMessages]
+      newMessages[tempIndex] = message
+      messages.set(channelId, newMessages)
     } else {
+      // No temp message found, append as new
       messages.set(channelId, [...channelMessages, message])
     }
 
