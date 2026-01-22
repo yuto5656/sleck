@@ -96,12 +96,12 @@ export default function ChannelPage() {
   }, [channelId, messages, loadMessages])
 
   const handleShowMembers = () => {
-    setShowMembers(true)
+    setShowMembers((prev) => !prev)
     setShowSettings(false)
   }
 
   const handleShowSettings = () => {
-    setShowSettings(true)
+    setShowSettings((prev) => !prev)
     setShowMembers(false)
   }
 
