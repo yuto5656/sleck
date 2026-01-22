@@ -7,6 +7,7 @@ import { prisma } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { sendPasswordResetEmail } from '../services/email'
+import { registrationLimiter } from '../middleware/rateLimiter'
 
 const router = Router()
 
@@ -39,8 +40,10 @@ const generateTokens = (userId: string) => {
 }
 
 // Register (requires invite token)
+// Extra strict rate limiting: 3 requests per 5 minutes
 router.post(
   '/register',
+  registrationLimiter,
   [
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 8 }),

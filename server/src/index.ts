@@ -16,7 +16,7 @@ import searchRoutes from './routes/search'
 import notificationRoutes from './routes/notifications'
 import { setupSocketHandlers } from './socket'
 import { errorHandler } from './middleware/errorHandler'
-import { generalLimiter, authLimiter } from './middleware/rateLimiter'
+import { generalLimiter, authLimiter, speedLimiter, burstLimiter } from './middleware/rateLimiter'
 
 dotenv.config()
 
@@ -53,11 +53,18 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true,
 }))
-app.use(express.json())
+
+// Limit request body size to prevent large payload attacks
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ extended: true, limit: '1mb' }))
+
 app.use('/uploads', express.static('uploads'))
 
-// Apply general rate limiter to all API routes
-app.use('/api', generalLimiter)
+// Apply rate limiters to all API routes
+// 1. Burst limiter - prevents rapid fire (10 req / 10 sec)
+// 2. Speed limiter - slows down after 30 requests
+// 3. General limiter - hard limit of 60 req/min
+app.use('/api', burstLimiter, speedLimiter, generalLimiter)
 
 // Routes
 // Auth routes have stricter rate limiting
