@@ -7,6 +7,7 @@ import { useDMStore } from '../stores/dmStore'
 import { useUnreadStore } from '../stores/unreadStore'
 import { useAuthStore } from '../stores/authStore'
 import { getStatusColor } from '../utils/statusColors'
+import { getAvatarUrl } from '../utils/avatarUrl'
 import CreateChannelModal from './CreateChannelModal'
 import InviteModal from './InviteModal'
 import NewDMModal from './NewDMModal'
@@ -190,14 +191,22 @@ export default function Sidebar({ onClose }: SidebarProps) {
                   >
                     <div className="relative">
                       <div className={clsx(
-                        'w-7 h-7 rounded-xl flex items-center justify-center text-xs font-semibold',
+                        'w-7 h-7 rounded-xl flex items-center justify-center text-xs font-semibold overflow-hidden',
                         isActive
                           ? 'bg-gradient-to-br from-emerald-400 to-cyan-500'
                           : isUnread
                             ? 'bg-gradient-to-br from-primary-400 to-accent-500'
                             : 'bg-gradient-to-br from-gray-500 to-gray-600'
                       )}>
-                        {dm.participant.displayName.charAt(0).toUpperCase()}
+                        {getAvatarUrl(dm.participant.avatarUrl) ? (
+                          <img
+                            src={getAvatarUrl(dm.participant.avatarUrl)!}
+                            alt={dm.participant.displayName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          dm.participant.displayName.charAt(0).toUpperCase()
+                        )}
                       </div>
                       <div
                         className={clsx(
