@@ -56,7 +56,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         // Try to restore last selected workspace from localStorage
         const lastWorkspaceId = localStorage.getItem(LAST_WORKSPACE_KEY)
         const targetWorkspace = lastWorkspaceId
-          ? workspaces.find(w => w.id === lastWorkspaceId) || workspaces[0]
+          ? workspaces.find((w: Workspace) => w.id === lastWorkspaceId) || workspaces[0]
           : workspaces[0]
 
         set({ currentWorkspace: targetWorkspace })
