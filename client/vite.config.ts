@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.png', 'icons/*.png'],
       manifest: {
         name: 'Sleck - Messaging App',
@@ -36,9 +36,6 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        // Skip waiting and claim clients immediately for faster updates
-        skipWaiting: true,
-        clientsClaim: true,
         runtimeCaching: [
           {
             // API requests should always go to network
