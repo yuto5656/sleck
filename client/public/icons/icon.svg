@@ -1,4 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
   <rect width="512" height="512" rx="100" fill="#611f69"/>
-  <text x="256" y="340" font-family="Arial, sans-serif" font-size="280" font-weight="bold" fill="white" text-anchor="middle">S</text>
+
+  <!-- Slack-style hash mark with inverted colors -->
+  <!-- Original Slack colors: #E01E5A (pink), #36C5F0 (blue), #2EB67D (green), #ECB22C (yellow) -->
+  <!-- Inverted: #1FE1A5 (cyan), #C93A0F (orange), #D1498B (magenta), #134DD3 (blue) -->
+
+  <!-- Top left - cyan (inverted from pink) -->
+  <rect x="128" y="192" width="48" height="128" rx="24" fill="#1FE1A5"/>
+  <rect x="128" y="128" width="48" height="88" rx="24" fill="#1FE1A5"/>
+  <circle cx="216" cy="152" r="24" fill="#1FE1A5"/>
+  <rect x="192" y="128" width="72" height="48" rx="24" fill="#1FE1A5"/>
+
+  <!-- Top right - orange (inverted from blue) -->
+  <rect x="240" y="128" width="128" height="48" rx="24" fill="#C93A0F"/>
+  <rect x="344" y="128" width="48" height="88" rx="24" fill="#C93A0F"/>
+  <circle cx="320" cy="216" r="24" fill="#C93A0F"/>
+  <rect x="296" y="192" width="72" height="48" rx="24" fill="#C93A0F"/>
+
+  <!-- Bottom left - magenta (inverted from green) -->
+  <rect x="128" y="336" width="128" height="48" rx="24" fill="#D1498B"/>
+  <rect x="128" y="296" width="48" height="88" rx="24" fill="#D1498B"/>
+  <circle cx="216" cy="320" r="24" fill="#D1498B"/>
+  <rect x="168" y="296" width="72" height="48" rx="24" fill="#D1498B"/>
+
+  <!-- Bottom right - blue (inverted from yellow) -->
+  <rect x="344" y="192" width="48" height="128" rx="24" fill="#134DD3"/>
+  <rect x="344" y="296" width="48" height="88" rx="24" fill="#134DD3"/>
+  <circle cx="320" cy="360" r="24" fill="#134DD3"/>
+  <rect x="272" y="336" width="96" height="48" rx="24" fill="#134DD3"/>
 </svg>
