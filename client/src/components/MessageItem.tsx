@@ -10,6 +10,23 @@ import { useToast } from './Toast'
 import { getErrorMessage } from '../utils/errorUtils'
 import EmojiPicker from 'emoji-picker-react'
 
+// Convert text with newlines to React nodes with <br /> elements
+function formatNewlines(text: string, keyPrefix: string): React.ReactNode[] {
+  const lines = text.split('\n')
+  const result: React.ReactNode[] = []
+
+  lines.forEach((line, index) => {
+    if (index > 0) {
+      result.push(<br key={`${keyPrefix}-br-${index}`} />)
+    }
+    if (line) {
+      result.push(line)
+    }
+  })
+
+  return result
+}
+
 // Format message content with mention highlighting
 // Supports both @name and @<name with spaces> formats
 function formatMentions(content: string, currentUserName?: string): React.ReactNode[] {
@@ -18,11 +35,13 @@ function formatMentions(content: string, currentUserName?: string): React.ReactN
   const parts: React.ReactNode[] = []
   let lastIndex = 0
   let match
+  let partIndex = 0
 
   while ((match = mentionRegex.exec(content)) !== null) {
-    // Add text before mention
+    // Add text before mention (with newline handling)
     if (match.index > lastIndex) {
-      parts.push(content.slice(lastIndex, match.index))
+      const textBefore = content.slice(lastIndex, match.index)
+      parts.push(...formatNewlines(textBefore, `text-${partIndex++}`))
     }
 
     // match[1] is name in brackets, match[2] is name without brackets
@@ -32,7 +51,7 @@ function formatMentions(content: string, currentUserName?: string): React.ReactN
 
     parts.push(
       <span
-        key={match.index}
+        key={`mention-${match.index}`}
         className={clsx(
           'px-1 rounded font-medium',
           isSelfMention
@@ -47,12 +66,13 @@ function formatMentions(content: string, currentUserName?: string): React.ReactN
     lastIndex = match.index + match[0].length
   }
 
-  // Add remaining text
+  // Add remaining text (with newline handling)
   if (lastIndex < content.length) {
-    parts.push(content.slice(lastIndex))
+    const textAfter = content.slice(lastIndex)
+    parts.push(...formatNewlines(textAfter, `text-${partIndex}`))
   }
 
-  return parts.length > 0 ? parts : [content]
+  return parts.length > 0 ? parts : formatNewlines(content, 'text-0')
 }
 
 interface MessageItemProps {
