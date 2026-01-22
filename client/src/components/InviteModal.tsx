@@ -44,7 +44,7 @@ export default function InviteModal({ onClose }: InviteModalProps) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">メンバーを招待</h2>
+          <h2 className="text-lg font-semibold text-gray-900">メンバーを招待</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -79,7 +79,7 @@ export default function InviteModal({ onClose }: InviteModalProps) {
                   type="text"
                   value={inviteUrl}
                   readOnly
-                  className="flex-1 px-3 py-2 border rounded bg-gray-50 text-sm"
+                  className="flex-1 px-3 py-2 border rounded bg-gray-50 text-sm text-gray-900"
                 />
                 <button
                   onClick={handleCopy}
@@ -102,7 +102,7 @@ export default function InviteModal({ onClose }: InviteModalProps) {
         <div className="p-4 border-t bg-gray-50 rounded-b-lg">
           <button
             onClick={onClose}
-            className="w-full py-2 border border-gray-300 rounded font-medium hover:bg-gray-100"
+            className="w-full py-2 border border-gray-300 rounded font-medium hover:bg-gray-100 text-gray-700"
           >
             閉じる
           </button>
