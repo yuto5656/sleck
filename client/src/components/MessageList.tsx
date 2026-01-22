@@ -67,7 +67,7 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore }
       className="flex-1 min-h-0 overflow-y-auto px-4 py-2"
     >
       {isLoading && hasMore && (
-        <div className="text-center py-2 text-gray-500">メッセージを読み込み中...</div>
+        <div className="text-center py-2 text-gray-500 dark:text-gray-400">メッセージを読み込み中...</div>
       )}
 
       {messages.map((message, index) => {
@@ -79,11 +79,11 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore }
           <div key={message.id}>
             {showDateDivider && (
               <div className="flex items-center my-4">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="px-4 text-xs font-medium text-gray-500">
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                <span className="px-4 text-xs font-medium text-gray-500 dark:text-gray-400">
                   {formatDateDivider(message.createdAt)}
                 </span>
-                <div className="flex-1 h-px bg-gray-200" />
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
               </div>
             )}
 
@@ -97,7 +97,7 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore }
       })}
 
       {messages.length === 0 && !isLoading && (
-        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+        <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
           <p className="text-lg">まだメッセージがありません</p>
           <p className="text-sm">最初のメッセージを送信しましょう！</p>
         </div>

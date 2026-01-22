@@ -45,27 +45,27 @@ export default function CreateChannelModal({ onClose }: CreateChannelModalProps)
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-bold text-gray-900">チャンネルを作成</h2>
-          <button type="button" onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-            <X className="w-5 h-5 text-gray-500" />
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">チャンネルを作成</h2>
+          <button type="button" onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded text-sm">
+            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               名前
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                 {isPrivate ? <Lock className="w-4 h-4" /> : <Hash className="w-4 h-4" />}
               </span>
               <input
@@ -73,24 +73,24 @@ export default function CreateChannelModal({ onClose }: CreateChannelModalProps)
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="例: 企画、general"
-                className="w-full pl-10 pr-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 bg-white placeholder-gray-400"
+                className="w-full pl-10 pr-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                 autoFocus
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               日本語、英数字、ハイフンが使用可能
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              説明 <span className="text-gray-400">（任意）</span>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              説明 <span className="text-gray-400 dark:text-gray-500">（任意）</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="このチャンネルの目的は？"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-gray-900 bg-white placeholder-gray-400"
+              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
               rows={3}
             />
           </div>
@@ -103,9 +103,9 @@ export default function CreateChannelModal({ onClose }: CreateChannelModalProps)
               onChange={(e) => setIsPrivate(e.target.checked)}
               className="w-4 h-4 rounded"
             />
-            <label htmlFor="private" className="text-sm text-gray-900">
+            <label htmlFor="private" className="text-sm text-gray-900 dark:text-white">
               <span className="font-medium">プライベートにする</span>
-              <p className="text-gray-500 text-xs">
+              <p className="text-gray-500 dark:text-gray-400 text-xs">
                 招待されたメンバーのみがこのチャンネルを見ることができます
               </p>
             </label>
@@ -115,7 +115,7 @@ export default function CreateChannelModal({ onClose }: CreateChannelModalProps)
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm border rounded hover:bg-gray-50 text-gray-700"
+              className="px-4 py-2 text-sm border dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
             >
               キャンセル
             </button>

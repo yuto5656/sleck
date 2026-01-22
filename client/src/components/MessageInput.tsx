@@ -184,8 +184,8 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
   return (
     <div {...getRootProps()} className="relative px-4 pb-4">
       {isDragActive && (
-        <div className="absolute inset-0 bg-primary-50 border-2 border-dashed border-primary-400 rounded-2xl flex items-center justify-center z-10 animate-fade-in">
-          <p className="text-primary-600 font-medium">ファイルをここにドロップ</p>
+        <div className="absolute inset-0 bg-primary-50 dark:bg-primary-900 border-2 border-dashed border-primary-400 rounded-2xl flex items-center justify-center z-10 animate-fade-in">
+          <p className="text-primary-600 dark:text-primary-300 font-medium">ファイルをここにドロップ</p>
         </div>
       )}
 
@@ -195,15 +195,15 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
           {files.map((file, index) => (
             <div
               key={index}
-              className="relative group bg-surface-100 rounded-xl p-3 pr-8 border border-surface-200 animate-slide-up"
+              className="relative group bg-surface-100 dark:bg-gray-700 rounded-xl p-3 pr-8 border border-surface-200 dark:border-gray-600 animate-slide-up"
             >
-              <span className="text-sm text-gray-700 truncate max-w-xs block font-medium">
+              <span className="text-sm text-gray-700 dark:text-gray-200 truncate max-w-xs block font-medium">
                 {file.name}
               </span>
               <button
                 type="button"
                 onClick={() => removeFile(index)}
-                className="absolute top-2 right-2 w-5 h-5 bg-gray-300 rounded-full text-xs hover:bg-red-400 hover:text-white transition-colors flex items-center justify-center"
+                className="absolute top-2 right-2 w-5 h-5 bg-gray-300 dark:bg-gray-500 rounded-full text-xs hover:bg-red-400 hover:text-white transition-colors flex items-center justify-center"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -213,8 +213,8 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
       )}
 
       <div className={clsx(
-        'flex items-center gap-2 bg-surface-50 border border-surface-200 rounded-2xl p-2 transition-all duration-200',
-        isDragActive && 'border-primary-400 bg-primary-50',
+        'flex items-center gap-2 bg-surface-50 dark:bg-gray-800 border border-surface-200 dark:border-gray-600 rounded-2xl p-2 transition-all duration-200',
+        isDragActive && 'border-primary-400 bg-primary-50 dark:bg-primary-900',
         'focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-500/20'
       )}>
         <input {...getInputProps()} />
@@ -222,7 +222,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
         <button
           type="button"
           onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
-          className="p-2.5 hover:bg-surface-200 rounded-xl flex-shrink-0 transition-colors"
+          className="p-2.5 hover:bg-surface-200 dark:hover:bg-gray-700 rounded-xl flex-shrink-0 transition-colors"
           title="ファイルを添付"
         >
           <Paperclip className="w-5 h-5 text-gray-400" />
@@ -234,7 +234,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
           onChange={handleContentChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 resize-none outline-none max-h-32 py-2 leading-normal bg-transparent text-gray-800 placeholder-gray-400"
+          className="flex-1 resize-none outline-none max-h-32 py-2 leading-normal bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
           rows={1}
           disabled={isSending}
         />
@@ -243,7 +243,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-2.5 hover:bg-surface-200 rounded-xl transition-colors"
+            className="p-2.5 hover:bg-surface-200 dark:hover:bg-gray-700 rounded-xl transition-colors"
             title="絵文字"
           >
             <Smile className="w-5 h-5 text-gray-400" />
@@ -252,7 +252,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
           <button
             type="button"
             onClick={handleMentionButtonClick}
-            className="p-2.5 hover:bg-surface-200 rounded-xl transition-colors"
+            className="p-2.5 hover:bg-surface-200 dark:hover:bg-gray-700 rounded-xl transition-colors"
             title="メンション"
           >
             <AtSign className="w-5 h-5 text-gray-400" />
@@ -266,7 +266,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
               'p-2.5 rounded-xl transition-all duration-200',
               content.trim() || files.length > 0
                 ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:shadow-glow hover:-translate-y-0.5'
-                : 'bg-surface-200 text-gray-400 cursor-not-allowed'
+                : 'bg-surface-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
             )}
             title="送信"
           >
@@ -283,7 +283,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
 
       {/* Mention list */}
       {showMentionList && filteredMembers.length > 0 && (
-        <div className="absolute bottom-full left-4 mb-2 bg-white border border-surface-200 rounded-2xl shadow-soft z-50 w-72 max-h-52 overflow-y-auto animate-slide-up">
+        <div className="absolute bottom-full left-4 mb-2 bg-white dark:bg-gray-800 border border-surface-200 dark:border-gray-600 rounded-2xl shadow-soft z-50 w-72 max-h-52 overflow-y-auto animate-slide-up">
           {filteredMembers.map((member, index) => (
             <button
               type="button"
@@ -291,7 +291,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
               onClick={() => handleMentionSelect(member)}
               className={clsx(
                 'w-full flex items-center gap-3 p-3 text-left transition-colors first:rounded-t-2xl last:rounded-b-2xl',
-                index === mentionIndex ? 'bg-primary-50' : 'hover:bg-surface-50'
+                index === mentionIndex ? 'bg-primary-50 dark:bg-primary-900' : 'hover:bg-surface-50 dark:hover:bg-gray-700'
               )}
             >
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
@@ -306,8 +306,8 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
                 )}
               </div>
               <div className="min-w-0">
-                <p className="font-medium text-gray-900 truncate">{member.displayName}</p>
-                <p className="text-xs text-gray-500 capitalize">{member.status}</p>
+                <p className="font-medium text-gray-900 dark:text-white truncate">{member.displayName}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{member.status}</p>
               </div>
             </button>
           ))}

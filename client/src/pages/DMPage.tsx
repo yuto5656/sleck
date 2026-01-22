@@ -95,19 +95,19 @@ export default function DMPage() {
 
   if (!currentDM) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500">
+      <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 bg-surface-50 dark:bg-gray-900">
         会話を選択してチャットを始めましょう
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col bg-surface-50 dark:bg-gray-900">
       {/* DM header */}
-      <div className="h-14 border-b flex items-center justify-between px-4">
+      <div className="h-14 border-b dark:border-gray-700 flex items-center justify-between px-4 bg-white dark:bg-gray-800">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-9 h-9 rounded bg-gray-300 flex items-center justify-center text-sm font-medium">
+            <div className="w-9 h-9 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
               {currentDM.participant.avatarUrl ? (
                 <img
                   src={currentDM.participant.avatarUrl}
@@ -126,19 +126,19 @@ export default function DMPage() {
             />
           </div>
           <div>
-            <h1 className="font-bold">{currentDM.participant.displayName}</h1>
-            <p className="text-xs text-gray-500 capitalize">{currentDM.participant.status}</p>
+            <h1 className="font-bold text-gray-900 dark:text-white">{currentDM.participant.displayName}</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{currentDM.participant.status}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded" title="音声通話">
-            <Phone className="w-5 h-5 text-gray-500" />
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="音声通話">
+            <Phone className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded" title="ビデオ通話">
-            <Video className="w-5 h-5 text-gray-500" />
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="ビデオ通話">
+            <Video className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded" title="その他">
-            <MoreVertical className="w-5 h-5 text-gray-500" />
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="その他">
+            <MoreVertical className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
       </div>
@@ -146,7 +146,7 @@ export default function DMPage() {
       {/* Messages */}
       <div ref={messagesRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-2">
         {isLoading && dmHasMore && (
-          <div className="text-center py-2 text-gray-500">メッセージを読み込み中...</div>
+          <div className="text-center py-2 text-gray-500 dark:text-gray-400">メッセージを読み込み中...</div>
         )}
 
         {dmMessages.map((message, index) => {
@@ -158,16 +158,16 @@ export default function DMPage() {
             <div key={message.id}>
               {showDateDivider && (
                 <div className="flex items-center my-4">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="px-4 text-xs font-medium text-gray-500">
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                  <span className="px-4 text-xs font-medium text-gray-500 dark:text-gray-400">
                     {formatDateDivider(message.createdAt)}
                   </span>
-                  <div className="flex-1 h-px bg-gray-200" />
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                 </div>
               )}
 
               <div className={clsx('flex gap-2 mb-2', isOwn && 'flex-row-reverse')}>
-                <div className="w-8 h-8 rounded bg-gray-300 flex-shrink-0 flex items-center justify-center text-xs font-medium">
+                <div className="w-8 h-8 rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-200">
                   {message.sender.avatarUrl ? (
                     <img
                       src={message.sender.avatarUrl}
@@ -182,12 +182,12 @@ export default function DMPage() {
                   <div
                     className={clsx(
                       'inline-block px-3 py-2 rounded-lg',
-                      isOwn ? 'bg-blue-500 text-white' : 'bg-gray-100'
+                      isOwn ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                     )}
                   >
                     <p className="break-words">{message.content}</p>
                   </div>
-                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 dark:text-gray-400">
                     <span>{format(new Date(message.createdAt), 'HH:mm')}</span>
                     {message.isEdited && <span>（編集済み）</span>}
                   </div>
@@ -198,11 +198,11 @@ export default function DMPage() {
         })}
 
         {dmMessages.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mb-4 text-gray-700 dark:text-gray-300 text-2xl font-semibold">
               {currentDM.participant.displayName.charAt(0).toUpperCase()}
             </div>
-            <p className="text-lg font-medium">{currentDM.participant.displayName}</p>
+            <p className="text-lg font-medium text-gray-900 dark:text-white">{currentDM.participant.displayName}</p>
             <p className="text-sm">会話の始まりです</p>
           </div>
         )}
@@ -210,7 +210,7 @@ export default function DMPage() {
 
       {/* Typing indicator */}
       {isTyping && (
-        <div className="px-4 py-1 text-sm text-gray-500">
+        <div className="px-4 py-1 text-sm text-gray-500 dark:text-gray-400">
           {currentDM.participant.displayName}が入力中...
         </div>
       )}

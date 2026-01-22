@@ -32,8 +32,8 @@ function formatMentions(content: string, currentUserId?: string): React.ReactNod
         className={clsx(
           'px-1 rounded font-medium',
           isSelfMention
-            ? 'bg-yellow-200 text-yellow-900'
-            : 'bg-blue-100 text-blue-800'
+            ? 'bg-yellow-200 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-200'
+            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
         )}
       >
         @{mentionName}
@@ -130,7 +130,7 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
   return (
     <div
       className={clsx(
-        'group relative px-4 py-1 -mx-4 hover:bg-gray-50',
+        'group relative px-4 py-1 -mx-4 hover:bg-gray-50 dark:hover:bg-gray-800',
         showHeader && 'mt-3'
       )}
       onMouseEnter={() => setShowActions(true)}
@@ -141,7 +141,7 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
     >
       <div className="flex gap-2">
         {showHeader ? (
-          <div className="w-9 h-9 rounded bg-gray-300 flex-shrink-0 flex items-center justify-center text-sm font-medium">
+          <div className="w-9 h-9 rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
             {message.user.avatarUrl ? (
               <img
                 src={message.user.avatarUrl}
@@ -159,12 +159,12 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
         <div className="flex-1 min-w-0">
           {showHeader && (
             <div className="flex items-baseline gap-2">
-              <span className="font-bold text-gray-900">{message.user.displayName}</span>
-              <span className="text-xs text-gray-500">
+              <span className="font-bold text-gray-900 dark:text-white">{message.user.displayName}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {format(new Date(message.createdAt), 'HH:mm')}
               </span>
               {message.isEdited && (
-                <span className="text-xs text-gray-400">(edited)</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">(edited)</span>
               )}
             </div>
           )}
@@ -174,7 +174,7 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full p-2 border rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border dark:border-gray-600 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 rows={3}
                 autoFocus
                 onKeyDown={(e) => {
@@ -202,14 +202,14 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
                     setIsEditing(false)
                     setEditContent(message.content)
                   }}
-                  className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                  className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500"
                 >
                   Cancel
                 </button>
               </div>
             </div>
           ) : (
-            <div className="text-gray-800 break-words">
+            <div className="text-gray-800 dark:text-gray-200 break-words">
               {formatMentions(message.content, user?.displayName)}
             </div>
           )}
@@ -232,9 +232,9 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
                       className="max-w-xs max-h-48 rounded border"
                     />
                   ) : (
-                    <div className="flex items-center gap-2 p-2 border rounded bg-gray-50 hover:bg-gray-100">
-                      <span className="text-sm text-gray-700">{file.originalName}</span>
-                      <span className="text-xs text-gray-500">
+                    <div className="flex items-center gap-2 p-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
+                      <span className="text-sm text-gray-700 dark:text-gray-200">{file.originalName}</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         ({Math.round(file.size / 1024)}KB)
                       </span>
                     </div>
@@ -255,12 +255,12 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
                   className={clsx(
                     'flex items-center gap-1 px-2 py-0.5 rounded-full text-sm border',
                     reaction.users.includes(user?.id || '')
-                      ? 'bg-blue-50 border-blue-300'
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                      ? 'bg-blue-50 dark:bg-blue-900 border-blue-300 dark:border-blue-700'
+                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                   )}
                 >
                   <span>{reaction.emoji}</span>
-                  <span className="text-xs text-gray-600">{reaction.count}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-300">{reaction.count}</span>
                 </button>
               ))}
             </div>
@@ -278,32 +278,32 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
 
       {/* Action buttons */}
       {showActions && !isEditing && (
-        <div className="absolute top-0 right-4 -translate-y-1/2 flex items-center gap-1 bg-white border rounded shadow-sm">
+        <div className="absolute top-0 right-4 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded shadow-sm">
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="p-1.5 hover:bg-gray-100 rounded"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
             title="Add reaction"
           >
-            <Smile className="w-4 h-4 text-gray-500" />
+            <Smile className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
-          <button type="button" className="p-1.5 hover:bg-gray-100 rounded" title="Reply in thread">
-            <MessageSquare className="w-4 h-4 text-gray-500" />
+          <button type="button" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded" title="Reply in thread">
+            <MessageSquare className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
           {isOwn && (
             <>
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="p-1.5 hover:bg-gray-100 rounded"
+                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
                 title="Edit"
               >
-                <Edit2 className="w-4 h-4 text-gray-500" />
+                <Edit2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
               <button
                 type="button"
                 onClick={handleDelete}
-                className="p-1.5 hover:bg-gray-100 rounded"
+                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
                 title="Delete"
               >
                 <Trash2 className="w-4 h-4 text-red-500" />

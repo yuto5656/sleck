@@ -46,23 +46,23 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
       {children}
       {dialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-start gap-3">
               {dialog.danger && (
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </div>
               )}
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900">{dialog.title}</h3>
-                <p className="mt-2 text-sm text-gray-600">{dialog.message}</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{dialog.title}</h3>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{dialog.message}</p>
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 {dialog.cancelText || 'キャンセル'}
               </button>

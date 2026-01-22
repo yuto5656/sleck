@@ -88,23 +88,23 @@ export default function SearchModal({ onClose }: SearchModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[70vh] flex flex-col"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[70vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b">
+        <div className="p-4 border-b dark:border-gray-700">
           <div className="flex items-center gap-2">
-            <Search className="w-5 h-5 text-gray-400" />
+            <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="メッセージ、ファイルなどを検索"
-              className="flex-1 outline-none text-lg text-gray-900"
+              className="flex-1 outline-none text-lg text-gray-900 dark:text-white bg-transparent placeholder-gray-400 dark:placeholder-gray-500"
               autoFocus
             />
-            <button type="button" onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-              <X className="w-5 h-5 text-gray-500" />
+            <button type="button" onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+              <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
 
@@ -119,8 +119,8 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                 }}
                 className={`flex items-center gap-1 px-3 py-1 text-sm rounded ${
                   activeTab === tab.id
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
                 {tab.icon && <tab.icon className="w-4 h-4" />}
@@ -132,7 +132,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
 
         <div className="flex-1 overflow-y-auto p-4">
           {isLoading && (
-            <div className="text-center text-gray-500">検索中...</div>
+            <div className="text-center text-gray-500 dark:text-gray-400">検索中...</div>
           )}
 
           {!isLoading && results && (
@@ -140,22 +140,22 @@ export default function SearchModal({ onClose }: SearchModalProps) {
               {/* Messages */}
               {results.messages && results.messages.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">メッセージ</h3>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">メッセージ</h3>
                   <div className="space-y-2">
                     {results.messages.map((msg) => (
                       <button
                         type="button"
                         key={msg.id}
                         onClick={() => handleChannelClick(msg.channel.id)}
-                        className="block w-full text-left p-3 rounded border hover:bg-gray-50"
+                        className="block w-full text-left p-3 rounded border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
                           <Hash className="w-3 h-3" />
                           <span>{msg.channel.name}</span>
                           <span>·</span>
                           <span>{msg.user.displayName}</span>
                         </div>
-                        <p className="text-gray-800 line-clamp-2">{msg.content}</p>
+                        <p className="text-gray-800 dark:text-gray-200 line-clamp-2">{msg.content}</p>
                       </button>
                     ))}
                   </div>
@@ -165,7 +165,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
               {/* Files */}
               {results.files && results.files.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">ファイル</h3>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">ファイル</h3>
                   <div className="space-y-2">
                     {results.files.map((file) => (
                       <a
@@ -173,12 +173,12 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                         href={file.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 rounded border hover:bg-gray-50"
+                        className="flex items-center gap-3 p-3 rounded border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
-                        <FileText className="w-8 h-8 text-gray-400" />
+                        <FileText className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                         <div>
-                          <p className="font-medium text-gray-800">{file.originalName}</p>
-                          <p className="text-sm text-gray-500">{file.mimeType}</p>
+                          <p className="font-medium text-gray-800 dark:text-gray-200">{file.originalName}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{file.mimeType}</p>
                         </div>
                       </a>
                     ))}
@@ -189,14 +189,14 @@ export default function SearchModal({ onClose }: SearchModalProps) {
               {/* Users */}
               {results.users && results.users.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">メンバー</h3>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">メンバー</h3>
                   <div className="space-y-2">
                     {results.users.map((user) => (
                       <div
                         key={user.id}
-                        className="flex items-center gap-3 p-3 rounded border hover:bg-gray-50"
+                        className="flex items-center gap-3 p-3 rounded border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
-                        <div className="w-10 h-10 rounded bg-gray-300 flex items-center justify-center text-sm font-medium">
+                        <div className="w-10 h-10 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
                           {user.avatarUrl ? (
                             <img
                               src={user.avatarUrl}
@@ -208,8 +208,8 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800">{user.displayName}</p>
-                          <p className="text-sm text-gray-500 capitalize">{user.status}</p>
+                          <p className="font-medium text-gray-800 dark:text-gray-200">{user.displayName}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{user.status}</p>
                         </div>
                       </div>
                     ))}
@@ -220,20 +220,20 @@ export default function SearchModal({ onClose }: SearchModalProps) {
               {/* Channels */}
               {results.channels && results.channels.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">チャンネル</h3>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">チャンネル</h3>
                   <div className="space-y-2">
                     {results.channels.map((channel) => (
                       <button
                         type="button"
                         key={channel.id}
                         onClick={() => handleChannelClick(channel.id)}
-                        className="flex items-center gap-3 w-full text-left p-3 rounded border hover:bg-gray-50"
+                        className="flex items-center gap-3 w-full text-left p-3 rounded border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
-                        <Hash className="w-5 h-5 text-gray-400" />
+                        <Hash className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                         <div>
-                          <p className="font-medium text-gray-800">{channel.name}</p>
+                          <p className="font-medium text-gray-800 dark:text-gray-200">{channel.name}</p>
                           {channel.description && (
-                            <p className="text-sm text-gray-500 line-clamp-1">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
                               {channel.description}
                             </p>
                           )}
@@ -249,7 +249,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
                 results.files?.length === 0 &&
                 results.users?.length === 0 &&
                 results.channels?.length === 0 && (
-                  <div className="text-center text-gray-500 py-8">
+                  <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                     「{query}」に一致する結果がありません
                   </div>
                 )}
@@ -257,7 +257,7 @@ export default function SearchModal({ onClose }: SearchModalProps) {
           )}
 
           {!isLoading && !results && (
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-gray-500 dark:text-gray-400 py-8">
               <p>メッセージ、ファイル、メンバー、チャンネルを検索</p>
               <p className="text-sm mt-2">
                 キーワード、@メンション、#チャンネルで検索してみてください

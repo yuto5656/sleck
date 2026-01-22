@@ -39,28 +39,28 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">設定</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4">
+        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">設定</h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
         <div className="p-4 space-y-6">
           {/* Notifications Section */}
           <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <Bell className="w-4 h-4" />
               通知
             </h3>
             <div className="space-y-3">
               <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-sm text-gray-700">アプリ内通知</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">アプリ内通知</span>
                 <input
                   type="checkbox"
                   checked={notifications}
@@ -70,8 +70,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               </label>
               <label className="flex items-center justify-between cursor-pointer">
                 <div>
-                  <span className="text-sm text-gray-700">デスクトップ通知</span>
-                  <p className="text-xs text-gray-400">新しいメッセージをデスクトップで通知</p>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">デスクトップ通知</span>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">新しいメッセージをデスクトップで通知</p>
                 </div>
                 <input
                   type="checkbox"
@@ -85,13 +85,13 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
           {/* Sound Section */}
           <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <Volume2 className="w-4 h-4" />
               サウンド
             </h3>
             <div className="space-y-3">
               <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-sm text-gray-700">通知音</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">通知音</span>
                 <input
                   type="checkbox"
                   checked={sounds}
@@ -104,17 +104,17 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
 
           {/* Display Section */}
           <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <Monitor className="w-4 h-4" />
               表示
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               ダークモードはユーザーメニューから切り替えできます
             </p>
           </div>
         </div>
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t dark:border-gray-700">
           <button
             type="button"
             onClick={onClose}

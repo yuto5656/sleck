@@ -41,22 +41,22 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slack-purple flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-slack-purple dark:bg-gray-900 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slack-purple mb-2">Sleck</h1>
-          <p className="text-gray-600">アカウントを作成</p>
+          <h1 className="text-4xl font-bold text-slack-purple dark:text-primary-400 mb-2">Sleck</h1>
+          <p className="text-gray-600 dark:text-gray-400">アカウントを作成</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {(error || validationError) && (
-            <div className="p-3 bg-red-50 text-red-600 rounded text-sm">
+            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-sm">
               {error || validationError}
             </div>
           )}
 
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               表示名
             </label>
             <input
@@ -65,13 +65,13 @@ export default function RegisterPage() {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               required
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-slack-purple"
+              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-slack-purple dark:focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="あなたの名前"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               メールアドレス
             </label>
             <input
@@ -80,13 +80,13 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-slack-purple"
+              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-slack-purple dark:focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="name@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               パスワード
             </label>
             <input
@@ -96,13 +96,13 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-slack-purple"
+              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-slack-purple dark:focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="8文字以上"
             />
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               パスワード（確認）
             </label>
             <input
@@ -111,7 +111,7 @@ export default function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-slack-purple"
+              className="w-full px-3 py-2 border dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-slack-purple dark:focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="パスワードを再入力"
             />
           </div>
@@ -119,15 +119,15 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-slack-purple text-white rounded font-medium hover:bg-slack-purple-dark disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-slack-purple dark:bg-primary-500 text-white rounded font-medium hover:bg-slack-purple-dark dark:hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'アカウント作成中...' : 'アカウントを作成'}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
           すでにアカウントをお持ちですか？{' '}
-          <Link to="/login" className="text-slack-purple hover:underline font-medium">
+          <Link to="/login" className="text-slack-purple dark:text-primary-400 hover:underline font-medium">
             サインイン
           </Link>
         </div>

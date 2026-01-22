@@ -39,24 +39,24 @@ export default function ChannelSettingsPanel({ channel, onClose, onDelete }: Cha
   }
 
   return (
-    <div className="fixed top-0 right-0 h-full w-80 bg-white border-l shadow-lg z-40 flex flex-col">
-      <div className="h-14 border-b flex items-center justify-between px-4">
-        <h2 className="font-bold">チャンネル設定</h2>
+    <div className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-800 border-l dark:border-gray-700 shadow-lg z-40 flex flex-col">
+      <div className="h-14 border-b dark:border-gray-700 flex items-center justify-between px-4">
+        <h2 className="font-bold text-gray-900 dark:text-white">チャンネル設定</h2>
         <button
           type="button"
           onClick={onClose}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
         >
-          <X className="w-5 h-5 text-gray-500" />
+          <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               チャンネル名
             </label>
-            <p className="text-gray-900">
+            <p className="text-gray-900 dark:text-white">
               {channel.isPrivate ? (
                 <Lock className="w-4 h-4 inline mr-1" />
               ) : (
@@ -67,36 +67,36 @@ export default function ChannelSettingsPanel({ channel, onClose, onDelete }: Cha
           </div>
           {channel.description && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 説明
               </label>
-              <p className="text-gray-900">{channel.description}</p>
+              <p className="text-gray-900 dark:text-white">{channel.description}</p>
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               タイプ
             </label>
-            <p className="text-gray-900">
+            <p className="text-gray-900 dark:text-white">
               {channel.isPrivate ? 'プライベート' : 'パブリック'}
             </p>
           </div>
 
           {/* Delete Channel */}
-          <div className="pt-4 border-t mt-6">
-            <label className="block text-sm font-medium text-red-600 mb-2">
+          <div className="pt-4 border-t dark:border-gray-700 mt-6">
+            <label className="block text-sm font-medium text-red-600 dark:text-red-400 mb-2">
               危険な操作
             </label>
             <button
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 border border-red-300 rounded hover:bg-red-50 disabled:opacity-50"
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 rounded hover:bg-red-50 dark:hover:bg-red-900/30 disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
               {isDeleting ? '削除中...' : 'チャンネルを削除'}
             </button>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               チャンネルを削除すると、すべてのメッセージも削除されます。
             </p>
           </div>

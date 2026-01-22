@@ -117,9 +117,9 @@ export default function ChannelPage() {
 
   if (!currentChannel) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-400 bg-surface-50">
+      <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500 bg-surface-50 dark:bg-gray-900">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary-100 to-accent-100 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary-100 to-accent-100 dark:from-primary-900 dark:to-accent-900 flex items-center justify-center">
             <Hash className="w-8 h-8 text-primary-500" />
           </div>
           <p className="font-medium">チャンネルを選択してチャットを始めましょう</p>
@@ -129,21 +129,21 @@ export default function ChannelPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-surface-50">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-surface-50 dark:bg-gray-900">
       {/* Channel header */}
-      <div className="h-16 bg-white/80 backdrop-blur-sm border-b border-surface-200 flex items-center justify-between px-6 flex-shrink-0">
+      <div className="h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-surface-200 dark:border-gray-700 flex items-center justify-between px-6 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-100 to-accent-100 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-100 to-accent-100 dark:from-primary-900 dark:to-accent-900 flex items-center justify-center">
             {currentChannel.isPrivate ? (
-              <Lock className="w-5 h-5 text-primary-600" />
+              <Lock className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             ) : (
-              <Hash className="w-5 h-5 text-primary-600" />
+              <Hash className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             )}
           </div>
           <div>
-            <h1 className="font-semibold text-lg text-gray-900">{currentChannel.name}</h1>
+            <h1 className="font-semibold text-lg text-gray-900 dark:text-white">{currentChannel.name}</h1>
             {currentChannel.description && (
-              <p className="text-xs text-gray-500 truncate max-w-md">{currentChannel.description}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-md">{currentChannel.description}</p>
             )}
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function ChannelPage() {
           <button
             type="button"
             onClick={handleShowMembers}
-            className={`p-2.5 rounded-xl transition-all duration-200 ${showMembers ? 'bg-primary-100 text-primary-600' : 'hover:bg-surface-100 text-gray-500'}`}
+            className={`p-2.5 rounded-xl transition-all duration-200 ${showMembers ? 'bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400' : 'hover:bg-surface-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
             title="メンバー"
           >
             <Users className="w-5 h-5" />
@@ -159,7 +159,7 @@ export default function ChannelPage() {
           <button
             type="button"
             onClick={handleShowSettings}
-            className={`p-2.5 rounded-xl transition-all duration-200 ${showSettings ? 'bg-primary-100 text-primary-600' : 'hover:bg-surface-100 text-gray-500'}`}
+            className={`p-2.5 rounded-xl transition-all duration-200 ${showSettings ? 'bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400' : 'hover:bg-surface-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
             title="設定"
           >
             <Settings className="w-5 h-5" />
@@ -176,9 +176,9 @@ export default function ChannelPage() {
       />
 
       {/* Typing indicator and Message input - fixed at bottom */}
-      <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm border-t border-surface-200">
+      <div className="flex-shrink-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-surface-200 dark:border-gray-700">
         {typingUsers.length > 0 && (
-          <div className="px-6 py-2 text-sm text-primary-600 flex items-center gap-2">
+          <div className="px-6 py-2 text-sm text-primary-600 dark:text-primary-400 flex items-center gap-2">
             <span className="flex gap-1">
               <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
               <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

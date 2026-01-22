@@ -34,15 +34,15 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">プロフィール編集</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md mx-4">
+        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">プロフィール編集</h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -73,30 +73,30 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
 
           {/* Display Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               表示名
             </label>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 bg-white"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="表示名を入力"
             />
           </div>
 
           {/* Email (read-only) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               メールアドレス
             </label>
             <input
               type="email"
               value={user?.email || ''}
               readOnly
-              className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+              className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
             />
-            <p className="mt-1 text-xs text-gray-400">メールアドレスは変更できません</p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">メールアドレスは変更できません</p>
           </div>
 
           {/* Actions */}
@@ -104,7 +104,7 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 text-gray-700 transition-colors"
+              className="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
             >
               キャンセル
             </button>
