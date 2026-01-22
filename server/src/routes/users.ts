@@ -4,22 +4,13 @@ import { prisma } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import multer from 'multer'
-import path from 'path'
-import { v4 as uuid } from 'uuid'
+import { uploadAvatar } from '../services/supabaseStorage'
 
 const router = Router()
 
-// File upload config for avatar
-const storage = multer.diskStorage({
-  destination: 'uploads/avatars',
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `${uuid()}${ext}`)
-  },
-})
-
+// File upload config for avatar (memory storage for Supabase upload)
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (_req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
@@ -140,7 +131,12 @@ router.post(
         throw new AppError('No file uploaded', 400, 'VALIDATION_ERROR')
       }
 
-      const avatarUrl = `/uploads/avatars/${req.file.filename}`
+      // Upload to Supabase Storage
+      const avatarUrl = await uploadAvatar(
+        req.userId!,
+        req.file.buffer,
+        req.file.mimetype
+      )
 
       const user = await prisma.user.update({
         where: { id: req.userId },
