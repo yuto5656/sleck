@@ -1,4 +1,6 @@
 // Notification sound utility using Web Audio API
+import { useNotificationSettingsStore } from '../stores/notificationSettingsStore'
+
 let audioContext: AudioContext | null = null
 
 function getAudioContext(): AudioContext {
@@ -42,20 +44,23 @@ export function playNotificationSound(): void {
   }
 }
 
-// Check if sound is enabled (stored in localStorage)
-const SOUND_ENABLED_KEY = 'sleck_notification_sound_enabled'
-
 export function isNotificationSoundEnabled(): boolean {
-  const stored = localStorage.getItem(SOUND_ENABLED_KEY)
-  return stored !== 'false' // Default to true
+  return useNotificationSettingsStore.getState().soundEnabled
 }
 
 export function setNotificationSoundEnabled(enabled: boolean): void {
-  localStorage.setItem(SOUND_ENABLED_KEY, String(enabled))
+  useNotificationSettingsStore.getState().setSoundEnabled(enabled)
 }
 
 export function playNotificationSoundIfEnabled(): void {
   if (isNotificationSoundEnabled()) {
+    playNotificationSound()
+  }
+}
+
+export function playChannelNotificationSound(channelId: string): void {
+  const store = useNotificationSettingsStore.getState()
+  if (store.soundEnabled && !store.isChannelMuted(channelId)) {
     playNotificationSound()
   }
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Hash, Lock, X, Trash2 } from 'lucide-react'
+import { Hash, Lock, X, Trash2, Bell, BellOff } from 'lucide-react'
 import { Channel } from '../types'
 import { useAuthStore } from '../stores/authStore'
+import { useNotificationSettingsStore } from '../stores/notificationSettingsStore'
 import { useConfirmDialog } from './ConfirmDialog'
 import { useToast } from './Toast'
 import { getErrorMessage } from '../utils/errorUtils'
@@ -17,9 +18,11 @@ export default function ChannelSettingsPanel({ channel, onClose, onDelete }: Cha
   const { showConfirm } = useConfirmDialog()
   const toast = useToast()
   const [isDeleting, setIsDeleting] = useState(false)
+  const { isChannelMuted, toggleChannelMute } = useNotificationSettingsStore()
 
   const isGeneralChannel = channel.name.toLowerCase() === 'general'
   const canDelete = (user?.role === 'admin' || user?.role === 'deputy_admin') && !isGeneralChannel
+  const isMuted = isChannelMuted(channel.id)
 
   const handleDelete = async () => {
     const confirmed = await showConfirm({
@@ -84,6 +87,39 @@ export default function ChannelSettingsPanel({ channel, onClose, onDelete }: Cha
             </label>
             <p className="text-gray-900 dark:text-white">
               {channel.isPrivate ? 'プライベート' : 'パブリック'}
+            </p>
+          </div>
+
+          {/* Notification Settings */}
+          <div className="pt-4 border-t dark:border-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              通知設定
+            </label>
+            <button
+              type="button"
+              onClick={() => toggleChannelMute(channel.id)}
+              className={`flex items-center gap-2 w-full px-4 py-2 text-sm rounded border transition-colors ${
+                isMuted
+                  ? 'text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  : 'text-primary-600 dark:text-primary-400 border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/30'
+              }`}
+            >
+              {isMuted ? (
+                <>
+                  <BellOff className="w-4 h-4" />
+                  通知オフ
+                </>
+              ) : (
+                <>
+                  <Bell className="w-4 h-4" />
+                  通知オン
+                </>
+              )}
+            </button>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              {isMuted
+                ? 'このチャンネルの通知音は鳴りません'
+                : '新しいメッセージが届くと通知音が鳴ります'}
             </p>
           </div>
 

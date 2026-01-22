@@ -8,6 +8,7 @@ import { useThreadStore } from '../stores/threadStore'
 import { socketService } from '../services/socket'
 import { channelApi } from '../services/api'
 import { Message } from '../types'
+import { playChannelNotificationSound } from '../utils/notificationSound'
 import MessageList from '../components/MessageList'
 import MessageInput from '../components/MessageInput'
 import MembersPanel from '../components/MembersPanel'
@@ -56,6 +57,10 @@ export default function ChannelPage() {
       // Only add message if it belongs to this channel
       if (message.channelId === channelId) {
         addMessage(channelId, message)
+        // Play notification sound if message is from someone else
+        if (message.user.id !== user?.id) {
+          playChannelNotificationSound(channelId)
+        }
       }
     })
 
