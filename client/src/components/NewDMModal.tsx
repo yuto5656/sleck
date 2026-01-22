@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { X, Search } from 'lucide-react'
 import clsx from 'clsx'
@@ -42,7 +43,7 @@ export default function NewDMModal({ onClose }: NewDMModalProps) {
     }
   }
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
@@ -129,4 +130,6 @@ export default function NewDMModal({ onClose }: NewDMModalProps) {
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }

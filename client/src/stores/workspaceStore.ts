@@ -3,6 +3,8 @@ import { Workspace, Channel, WorkspaceMember } from '../types'
 import { workspaceApi, channelApi, messageApi } from '../services/api'
 import { socketService } from '../services/socket'
 
+const LAST_WORKSPACE_KEY = 'sleck_last_workspace_id'
+
 interface WorkspaceState {
   workspaces: Workspace[]
   currentWorkspace: Workspace | null
@@ -49,13 +51,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
       set({ workspaces, isLoading: false })
 
-      // Set first workspace as current if none selected
+      // Set workspace as current if none selected
       if (!get().currentWorkspace && workspaces.length > 0) {
-        set({ currentWorkspace: workspaces[0] })
+        // Try to restore last selected workspace from localStorage
+        const lastWorkspaceId = localStorage.getItem(LAST_WORKSPACE_KEY)
+        const targetWorkspace = lastWorkspaceId
+          ? workspaces.find(w => w.id === lastWorkspaceId) || workspaces[0]
+          : workspaces[0]
+
+        set({ currentWorkspace: targetWorkspace })
         // Load channels and members in parallel for faster startup
         Promise.all([
-          get().loadChannels(workspaces[0].id),
-          get().loadMembers(workspaces[0].id),
+          get().loadChannels(targetWorkspace.id),
+          get().loadMembers(targetWorkspace.id),
         ])
       }
     } catch (error: unknown) {
@@ -70,11 +78,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   setCurrentWorkspace: (workspace) => {
     set({ currentWorkspace: workspace, currentChannel: null, channels: [], members: [] })
     if (workspace) {
+      // Save to localStorage for persistence across reloads
+      localStorage.setItem(LAST_WORKSPACE_KEY, workspace.id)
       // Load channels and members in parallel
       Promise.all([
         get().loadChannels(workspace.id),
         get().loadMembers(workspace.id),
       ])
+    } else {
+      localStorage.removeItem(LAST_WORKSPACE_KEY)
     }
   },
 

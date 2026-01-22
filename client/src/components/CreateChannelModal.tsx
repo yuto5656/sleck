@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Hash, Lock } from 'lucide-react'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 
@@ -43,9 +44,9 @@ export default function CreateChannelModal({ onClose }: CreateChannelModalProps)
     }
   }
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">チャンネルを作成</h2>
           <button type="button" onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
@@ -131,4 +132,6 @@ export default function CreateChannelModal({ onClose }: CreateChannelModalProps)
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }

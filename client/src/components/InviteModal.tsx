@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Copy, Check, Loader2 } from 'lucide-react'
 import { workspaceApi } from '../services/api'
 import { useWorkspaceStore } from '../stores/workspaceStore'
@@ -41,7 +42,7 @@ export default function InviteModal({ onClose }: InviteModalProps) {
     }
   }
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
@@ -107,4 +108,6 @@ export default function InviteModal({ onClose }: InviteModalProps) {
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }
