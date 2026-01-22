@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
@@ -15,6 +15,7 @@ export default function Layout() {
   const { loadDMs } = useDMStore()
   const { markChannelUnread, markDMUnread } = useUnreadStore()
   const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     // Load all data in parallel for faster startup
@@ -67,11 +68,30 @@ export default function Layout() {
     }
   }, [user?.id, location.pathname, markChannelUnread, markDMUnread])
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
+
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        {/* Sidebar - hidden on mobile unless open */}
+        <div className={`
+          fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:block
+        `}>
+          <Sidebar onClose={() => setSidebarOpen(false)} />
+        </div>
         <main className="flex-1 flex flex-col overflow-hidden">
           <Outlet />
         </main>

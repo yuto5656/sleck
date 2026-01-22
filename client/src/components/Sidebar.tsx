@@ -12,7 +12,11 @@ import InviteModal from './InviteModal'
 import NewDMModal from './NewDMModal'
 import UserManagementPanel from './UserManagementPanel'
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const { channels, currentChannel, setCurrentChannel } = useWorkspaceStore()
@@ -32,6 +36,7 @@ export default function Sidebar() {
     setCurrentDM(null)
     markChannelRead(channel.id)
     navigate(`/channel/${channel.id}`)
+    onClose?.()
   }
 
   const handleDMClick = (dm: typeof dms[0]) => {
@@ -39,10 +44,11 @@ export default function Sidebar() {
     setCurrentChannel(null)
     markDMRead(dm.id)
     navigate(`/dm/${dm.id}`)
+    onClose?.()
   }
 
   return (
-    <aside className="w-64 bg-gradient-dark text-sidebar-text flex flex-col border-r border-white/5">
+    <aside className="w-64 h-full bg-gradient-dark text-sidebar-text flex flex-col border-r border-white/5">
       {/* Channels Section */}
       <div className="flex-1 overflow-y-auto py-4">
         <div className="px-3 mb-4">

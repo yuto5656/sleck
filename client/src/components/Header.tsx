@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, Bell, ChevronDown, Sparkles } from 'lucide-react'
+import { Search, Bell, ChevronDown, Sparkles, Menu } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useNotificationStore } from '../stores/notificationStore'
@@ -8,7 +8,11 @@ import UserMenu from './UserMenu'
 import NotificationPanel from './NotificationPanel'
 import WorkspaceMenu from './WorkspaceMenu'
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void
+}
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const { user } = useAuthStore()
   const { currentWorkspace } = useWorkspaceStore()
   const { unreadCount, loadNotifications } = useNotificationStore()
@@ -25,37 +29,56 @@ export default function Header() {
   }, [loadNotifications])
 
   return (
-    <header className="bg-gradient-to-r from-sidebar to-slate-800 h-14 flex items-center px-4 text-white shadow-lg">
-      <div className="flex-1 flex items-center gap-4">
+    <header className="bg-gradient-to-r from-sidebar to-slate-800 h-14 flex items-center px-2 md:px-4 text-white shadow-lg">
+      <div className="flex-1 flex items-center gap-2 md:gap-4">
+        {/* Mobile menu button */}
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="md:hidden p-2 hover:bg-white/10 rounded-xl transition-all duration-200"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         <button
           type="button"
           onClick={() => setShowWorkspaceMenu((prev) => !prev)}
-          className="flex items-center gap-2 hover:bg-white/10 rounded-xl px-3 py-2 transition-all duration-200"
+          className="flex items-center gap-2 hover:bg-white/10 rounded-xl px-2 md:px-3 py-2 transition-all duration-200"
         >
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center shadow-glow">
             <Sparkles className="w-4 h-4" />
           </div>
-          <span className="font-semibold text-lg">
+          <span className="font-semibold text-base md:text-lg truncate max-w-[100px] md:max-w-none">
             {currentWorkspace?.name || 'Sleck'}
           </span>
-          <ChevronDown className="w-4 h-4 opacity-70" />
+          <ChevronDown className="w-4 h-4 opacity-70 hidden sm:block" />
         </button>
         {showWorkspaceMenu && (
           <WorkspaceMenu onClose={() => setShowWorkspaceMenu(false)} />
         )}
       </div>
 
-      <div className="flex-1 max-w-xl">
+      {/* Search - hidden on small mobile */}
+      <div className="hidden sm:block flex-1 max-w-xl">
         <button
           type="button"
           onClick={() => setShowSearch(true)}
           className="w-full flex items-center gap-3 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm text-white/80 transition-all duration-200 border border-white/10"
         >
           <Search className="w-4 h-4" />
-          <span>{currentWorkspace?.name}を検索</span>
-          <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-md">⌘K</span>
+          <span className="truncate">{currentWorkspace?.name}を検索</span>
+          <span className="ml-auto text-xs bg-white/10 px-2 py-0.5 rounded-md hidden md:block">⌘K</span>
         </button>
       </div>
+
+      {/* Mobile search button */}
+      <button
+        type="button"
+        onClick={() => setShowSearch(true)}
+        className="sm:hidden p-2 hover:bg-white/10 rounded-xl transition-all duration-200"
+      >
+        <Search className="w-5 h-5" />
+      </button>
 
       <div className="flex-1 flex items-center justify-end gap-2">
         <button

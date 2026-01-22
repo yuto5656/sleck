@@ -111,30 +111,42 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
 
     // Add temp message immediately and track the pending ID
-    const messages = new Map(get().messages)
-    const channelMessages = messages.get(channelId) || []
-    messages.set(channelId, [...channelMessages, tempMessage])
+    // Only add to main message list if it's not a thread reply
     const pendingMessageIds = new Set(get().pendingMessageIds)
     pendingMessageIds.add(tempId)
-    set({ messages, pendingMessageIds })
+
+    if (!parentId) {
+      const messages = new Map(get().messages)
+      const channelMessages = messages.get(channelId) || []
+      messages.set(channelId, [...channelMessages, tempMessage])
+      set({ messages, pendingMessageIds })
+    } else {
+      set({ pendingMessageIds })
+    }
 
     try {
       await messageApi.sendMessage(channelId, { content, parentId })
       // Remove temp message - socket event will add the real message
-      const updatedMessages = new Map(get().messages)
-      const currentMessages = updatedMessages.get(channelId) || []
-      updatedMessages.set(channelId, currentMessages.filter(m => m.id !== tempId))
+      if (!parentId) {
+        const updatedMessages = new Map(get().messages)
+        const currentMessages = updatedMessages.get(channelId) || []
+        updatedMessages.set(channelId, currentMessages.filter(m => m.id !== tempId))
+        set({ messages: updatedMessages })
+      }
       const updatedPendingIds = new Set(get().pendingMessageIds)
       updatedPendingIds.delete(tempId)
-      set({ messages: updatedMessages, pendingMessageIds: updatedPendingIds })
+      set({ pendingMessageIds: updatedPendingIds })
     } catch (error: unknown) {
       // Remove temp message on error
-      const updatedMessages = new Map(get().messages)
-      const currentMessages = updatedMessages.get(channelId) || []
-      updatedMessages.set(channelId, currentMessages.filter(m => m.id !== tempId))
+      if (!parentId) {
+        const updatedMessages = new Map(get().messages)
+        const currentMessages = updatedMessages.get(channelId) || []
+        updatedMessages.set(channelId, currentMessages.filter(m => m.id !== tempId))
+        set({ messages: updatedMessages })
+      }
       const updatedPendingIds = new Set(get().pendingMessageIds)
       updatedPendingIds.delete(tempId)
-      set({ messages: updatedMessages, pendingMessageIds: updatedPendingIds })
+      set({ pendingMessageIds: updatedPendingIds })
 
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       set({ error: err.response?.data?.error?.message || 'Failed to send message' })

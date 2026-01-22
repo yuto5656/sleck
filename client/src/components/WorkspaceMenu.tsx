@@ -57,7 +57,7 @@ export default function WorkspaceMenu({ onClose }: WorkspaceMenuProps) {
                   onClick={() => handleSelectWorkspace(workspace)}
                   className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-100 text-left"
                 >
-                  <div className="w-9 h-9 rounded bg-slack-purple flex items-center justify-center text-white font-bold">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-bold text-sm">
                     {workspace.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -112,7 +112,7 @@ export default function WorkspaceMenu({ onClose }: WorkspaceMenuProps) {
                   type="text"
                   value={newWorkspaceName}
                   onChange={(e) => setNewWorkspaceName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-slack-purple"
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="例: マイチーム"
                   autoFocus
                 />
@@ -125,14 +125,14 @@ export default function WorkspaceMenu({ onClose }: WorkspaceMenuProps) {
                   type="text"
                   value={newWorkspaceDescription}
                   onChange={(e) => setNewWorkspaceDescription(e.target.value)}
-                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-slack-purple"
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="このワークスペースについて"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!newWorkspaceName.trim() || isCreating}
-                className="w-full py-2 bg-slack-purple text-white rounded font-medium hover:bg-slack-purple-dark disabled:opacity-50"
+                className="w-full py-2 bg-primary-500 text-white rounded font-medium hover:bg-primary-600 disabled:opacity-50"
               >
                 {isCreating ? '作成中...' : '作成'}
               </button>

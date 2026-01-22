@@ -54,8 +54,8 @@ export default function ChannelPage() {
     if (!channelId) return
 
     const cleanupNewMessage = socketService.onNewMessage((message) => {
-      // Only add message if it belongs to this channel
-      if (message.channelId === channelId) {
+      // Only add message if it belongs to this channel and is not a thread reply
+      if (message.channelId === channelId && !message.parentId) {
         addMessage(channelId, message)
         // Play notification sound if message is from someone else
         if (message.user.id !== user?.id) {
