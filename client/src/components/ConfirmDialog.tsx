@@ -45,7 +45,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     <ConfirmDialogContext.Provider value={{ showConfirm }}>
       {children}
       {dialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-start gap-3">
               {dialog.danger && (
