@@ -38,13 +38,14 @@ const generateTokens = (userId: string) => {
   return { accessToken, refreshToken }
 }
 
-// Register
+// Register (requires invite token)
 router.post(
   '/register',
   [
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 8 }),
     body('displayName').trim().isLength({ min: 1, max: 100 }),
+    body('inviteToken').notEmpty().withMessage('招待トークンが必要です'),
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -53,7 +54,21 @@ router.post(
         throw new AppError('Validation error', 400, 'VALIDATION_ERROR', errors.array())
       }
 
-      const { email, password, displayName } = req.body
+      const { email, password, displayName, inviteToken } = req.body
+
+      // Validate invite token
+      const invite = await prisma.workspaceInvite.findUnique({
+        where: { token: inviteToken },
+        include: { workspace: true },
+      })
+
+      if (!invite) {
+        throw new AppError('無効な招待トークンです', 400, 'INVALID_INVITE')
+      }
+
+      if (invite.expiresAt < new Date()) {
+        throw new AppError('招待リンクの有効期限が切れています', 400, 'INVITE_EXPIRED')
+      }
 
       const existingUser = await prisma.user.findUnique({ where: { email } })
       if (existingUser) {
@@ -62,27 +77,58 @@ router.post(
 
       const passwordHash = await bcrypt.hash(password, 12)
 
-      const user = await prisma.user.create({
-        data: {
-          email,
-          passwordHash,
-          displayName,
-          status: 'online',
-        },
-        select: {
-          id: true,
-          email: true,
-          displayName: true,
-          avatarUrl: true,
-          status: true,
-          createdAt: true,
-        },
+      // Create user and add to workspace in transaction
+      const result = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            email,
+            passwordHash,
+            displayName,
+            status: 'online',
+          },
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            avatarUrl: true,
+            status: true,
+            createdAt: true,
+          },
+        })
+
+        // Add user to workspace
+        await tx.workspaceMember.create({
+          data: {
+            userId: user.id,
+            workspaceId: invite.workspaceId,
+            role: 'member',
+          },
+        })
+
+        // Add user to general channel
+        const generalChannel = await tx.channel.findFirst({
+          where: {
+            workspaceId: invite.workspaceId,
+            name: { equals: 'general', mode: 'insensitive' },
+          },
+        })
+
+        if (generalChannel) {
+          await tx.channelMember.create({
+            data: {
+              userId: user.id,
+              channelId: generalChannel.id,
+            },
+          })
+        }
+
+        return user
       })
 
-      const tokens = generateTokens(user.id)
+      const tokens = generateTokens(result.id)
 
       res.status(201).json({
-        user,
+        user: result,
         ...tokens,
       })
     } catch (error) {
