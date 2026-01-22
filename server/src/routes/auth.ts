@@ -17,10 +17,10 @@ const generateResetToken = () => {
 
 const generateTokens = (userId: string) => {
   const accessTokenOptions: SignOptions = {
-    expiresIn: 900 // 15 minutes in seconds
+    expiresIn: 86400 // 24 hours in seconds
   }
   const refreshTokenOptions: SignOptions = {
-    expiresIn: 604800 // 7 days in seconds
+    expiresIn: 2592000 // 30 days in seconds
   }
 
   const accessToken = jwt.sign(
