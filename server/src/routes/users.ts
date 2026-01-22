@@ -311,43 +311,35 @@ router.delete('/:userId', authenticate, async (req: AuthRequest, res: Response, 
     }
 
     // Delete user and all related data using transaction
+    // Note: Many relations have onDelete: Cascade in schema, so deleting user will cascade
     await prisma.$transaction(async (tx) => {
-      // Delete user's messages
+      // Delete user's messages (no cascade)
       await tx.message.deleteMany({
         where: { userId: req.params.userId },
       })
 
-      // Delete user's DM messages
-      await tx.dMMessage.deleteMany({
-        where: { senderId: req.params.userId },
-      })
-
-      // Delete user's reactions
+      // Delete user's reactions (no cascade)
       await tx.reaction.deleteMany({
         where: { userId: req.params.userId },
       })
 
-      // Delete user's channel memberships
+      // Delete user's channel memberships (no cascade)
       await tx.channelMember.deleteMany({
         where: { userId: req.params.userId },
       })
 
-      // Delete user's workspace memberships
+      // Delete user's workspace memberships (no cascade)
       await tx.workspaceMember.deleteMany({
         where: { userId: req.params.userId },
       })
 
-      // Delete user's DM participations
-      await tx.dMParticipant.deleteMany({
-        where: { userId: req.params.userId },
-      })
-
-      // Delete user's notifications
+      // Delete user's notifications (has cascade but delete explicitly for safety)
       await tx.notification.deleteMany({
         where: { userId: req.params.userId },
       })
 
       // Finally delete the user
+      // This will cascade: DMMessage (sender), DirectMessage (participant1/2)
       await tx.user.delete({
         where: { id: req.params.userId },
       })
