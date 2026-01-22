@@ -32,6 +32,11 @@ const getAllowedOrigins = (): string | string[] => {
 const allowedOrigins = getAllowedOrigins()
 
 const app = express()
+
+// Trust proxy for Render (behind reverse proxy)
+// This is required for rate limiting to work correctly with X-Forwarded-For header
+app.set('trust proxy', 1)
+
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: {
