@@ -10,7 +10,7 @@ import { socketService } from '../services/socket'
 import { Message, DMMessage } from '../types'
 
 export default function Layout() {
-  const { user, loadUser } = useAuthStore()
+  const { user, loadUser, setUser } = useAuthStore()
   const { loadWorkspaces, initSocketListeners } = useWorkspaceStore()
   const { loadDMs } = useDMStore()
   const { markChannelUnread, markDMUnread } = useUnreadStore()
@@ -31,6 +31,18 @@ export default function Layout() {
     const cleanup = initSocketListeners()
     return cleanup
   }, [initSocketListeners])
+
+  // Listen for own status updates from server
+  useEffect(() => {
+    const cleanup = socketService.onUserStatus((data) => {
+      // Update own user status when server confirms it
+      if (user && data.userId === user.id) {
+        setUser({ ...user, status: data.status })
+      }
+    })
+
+    return cleanup
+  }, [user, setUser])
 
   // Listen for new messages and mark channels/DMs as unread
   useEffect(() => {

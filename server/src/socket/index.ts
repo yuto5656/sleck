@@ -70,7 +70,13 @@ export function setupSocketHandlers(io: Server) {
       }
     }
 
-    // Broadcast online status
+    // Send online status to self (so client updates its own status)
+    socket.emit('user:status', {
+      userId: socket.userId,
+      status: 'online',
+    })
+
+    // Broadcast online status to others
     for (const membership of memberships) {
       socket.to(`workspace:${membership.workspaceId}`).emit('user:online', {
         userId: socket.userId,
