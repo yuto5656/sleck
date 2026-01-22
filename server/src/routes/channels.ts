@@ -217,10 +217,20 @@ router.delete('/:channelId', authenticate, async (req: AuthRequest, res: Respons
       throw new AppError('Channel not found', 404, 'NOT_FOUND')
     }
 
-    // Check permission
-    const workspaceMembership = channel.workspace.members[0]
-    if (!workspaceMembership || !['owner', 'admin'].includes(workspaceMembership.role)) {
-      throw new AppError('Permission denied', 403, 'FORBIDDEN')
+    // Prevent deletion of General channel
+    if (channel.name.toLowerCase() === 'general') {
+      throw new AppError('Generalチャンネルは削除できません', 400, 'VALIDATION_ERROR')
+    }
+
+    // Get user role
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { role: true },
+    })
+
+    // Check permission - only admin or deputy_admin can delete channels
+    if (!user || !['admin', 'deputy_admin'].includes(user.role)) {
+      throw new AppError('チャンネルを削除する権限がありません', 403, 'FORBIDDEN')
     }
 
     await prisma.channel.delete({

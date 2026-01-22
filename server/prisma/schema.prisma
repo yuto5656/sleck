@@ -28,6 +28,12 @@ enum NotificationType {
   reaction
 }
 
+enum UserRole {
+  admin
+  deputy_admin
+  member
+}
+
 model User {
   id            String     @id @default(uuid())
   email         String     @unique
@@ -36,6 +42,7 @@ model User {
   passwordHash  String
   status        UserStatus @default(offline)
   statusMessage String?
+  role          UserRole   @default(member)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 

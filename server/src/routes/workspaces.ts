@@ -272,9 +272,15 @@ router.post(
 
       const { name, description, isPrivate = false } = req.body
 
-      // Check if private channel creation is allowed
-      if (isPrivate && membership.role === 'member') {
-        throw new AppError('Only admins can create private channels', 403, 'FORBIDDEN')
+      // Get user role
+      const user = await prisma.user.findUnique({
+        where: { id: req.userId },
+        select: { role: true },
+      })
+
+      // Check if channel creation is allowed - only admin or deputy_admin can create channels
+      if (!user || !['admin', 'deputy_admin'].includes(user.role)) {
+        throw new AppError('チャンネルを作成する権限がありません', 403, 'FORBIDDEN')
       }
 
       // Check for duplicate name

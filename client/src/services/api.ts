@@ -81,6 +81,9 @@ export const userApi = {
     })
   },
   getUser: (userId: string) => api.get(`/users/${userId}`),
+  getAllUsers: () => api.get('/users'),
+  updateRole: (userId: string, role: 'deputy_admin' | 'member') =>
+    api.patch(`/users/${userId}/role`, { role }),
 }
 
 // Workspace API

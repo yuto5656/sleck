@@ -43,6 +43,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response, next: Ne
         avatarUrl: true,
         status: true,
         statusMessage: true,
+        role: true,
         createdAt: true,
       },
     })
@@ -168,6 +169,7 @@ router.get('/:userId', authenticate, async (req: AuthRequest, res: Response, nex
         avatarUrl: true,
         status: true,
         statusMessage: true,
+        role: true,
       },
     })
 
@@ -180,5 +182,99 @@ router.get('/:userId', authenticate, async (req: AuthRequest, res: Response, nex
     next(error)
   }
 })
+
+// Get all users (admin only)
+router.get('/', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    // Check if requester is admin
+    const requester = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { role: true },
+    })
+
+    if (!requester || requester.role !== 'admin') {
+      throw new AppError('管理者のみがユーザー一覧を取得できます', 403, 'FORBIDDEN')
+    }
+
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        avatarUrl: true,
+        status: true,
+        role: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    res.json({ users })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// Update user role (admin only)
+router.patch(
+  '/:userId/role',
+  authenticate,
+  [body('role').isIn(['deputy_admin', 'member'])],
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new AppError('Validation error', 400, 'VALIDATION_ERROR', errors.array())
+      }
+
+      // Check if requester is admin
+      const requester = await prisma.user.findUnique({
+        where: { id: req.userId },
+        select: { role: true },
+      })
+
+      if (!requester || requester.role !== 'admin') {
+        throw new AppError('管理者のみがロールを変更できます', 403, 'FORBIDDEN')
+      }
+
+      // Prevent changing admin's own role
+      if (req.params.userId === req.userId) {
+        throw new AppError('自分のロールは変更できません', 400, 'VALIDATION_ERROR')
+      }
+
+      // Check target user exists
+      const targetUser = await prisma.user.findUnique({
+        where: { id: req.params.userId },
+        select: { role: true },
+      })
+
+      if (!targetUser) {
+        throw new AppError('ユーザーが見つかりません', 404, 'NOT_FOUND')
+      }
+
+      // Prevent changing admin role
+      if (targetUser.role === 'admin') {
+        throw new AppError('管理者のロールは変更できません', 400, 'VALIDATION_ERROR')
+      }
+
+      const { role } = req.body
+
+      const user = await prisma.user.update({
+        where: { id: req.params.userId },
+        data: { role },
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          role: true,
+        },
+      })
+
+      res.json(user)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
 
 export default router

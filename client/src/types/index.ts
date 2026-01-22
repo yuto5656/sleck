@@ -1,3 +1,5 @@
+export type UserRole = 'admin' | 'deputy_admin' | 'member'
+
 export interface User {
   id: string
   email: string
@@ -5,6 +7,7 @@ export interface User {
   avatarUrl: string | null
   status: 'online' | 'away' | 'dnd' | 'offline'
   statusMessage: string | null
+  role: UserRole
   createdAt: string
 }
 
