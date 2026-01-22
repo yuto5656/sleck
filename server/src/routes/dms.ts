@@ -3,6 +3,7 @@ import { body, query, validationResult } from 'express-validator'
 import { prisma, io } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
+import { createAndEmitNotification } from '../utils/notifications'
 
 const router = Router()
 
@@ -278,14 +279,12 @@ router.post(
         ? dm.participant2Id
         : dm.participant1Id
 
-      await prisma.notification.create({
-        data: {
-          userId: recipientId,
-          type: 'dm',
-          content: `New message from ${message.sender.displayName}`,
-          referenceId: dm.id,
-          referenceType: 'dm',
-        },
+      await createAndEmitNotification({
+        userId: recipientId,
+        type: 'dm',
+        content: `${message.sender.displayName}さんからメッセージが届きました`,
+        referenceId: dm.id,
+        referenceType: 'dm',
       })
 
       res.status(201).json(message)

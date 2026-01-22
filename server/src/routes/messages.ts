@@ -3,6 +3,7 @@ import { body, query, validationResult } from 'express-validator'
 import { prisma, io } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
+import { createAndEmitNotification } from '../utils/notifications'
 
 const router = Router()
 
@@ -259,14 +260,12 @@ async function createMentionNotifications(
       // Notify all members
       for (const member of channel.members) {
         if (member.userId !== senderId) {
-          await prisma.notification.create({
-            data: {
-              userId: member.userId,
-              type: 'mention',
-              content: `${message.user.displayName} mentioned @${mention} in #${channel.name}`,
-              referenceId: message.id,
-              referenceType: 'message',
-            },
+          await createAndEmitNotification({
+            userId: member.userId,
+            type: 'mention',
+            content: `${message.user.displayName}さんが @${mention} でメンションしました（#${channel.name}）`,
+            referenceId: message.id,
+            referenceType: 'message',
           })
         }
       }
@@ -277,14 +276,12 @@ async function createMentionNotifications(
       })
 
       if (user && user.id !== senderId) {
-        await prisma.notification.create({
-          data: {
-            userId: user.id,
-            type: 'mention',
-            content: `${message.user.displayName} mentioned you in #${channel.name}`,
-            referenceId: message.id,
-            referenceType: 'message',
-          },
+        await createAndEmitNotification({
+          userId: user.id,
+          type: 'mention',
+          content: `${message.user.displayName}さんがあなたをメンションしました（#${channel.name}）`,
+          referenceId: message.id,
+          referenceType: 'message',
         })
       }
     }
