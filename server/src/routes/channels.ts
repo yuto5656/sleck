@@ -614,6 +614,115 @@ async function createMentionNotifications(
   }
 }
 
+// Add member to channel (for private channels)
+router.post(
+  '/:channelId/members',
+  authenticate,
+  [body('userId').isUUID()],
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new AppError('Validation error', 400, 'VALIDATION_ERROR', errors.array())
+      }
+
+      const channel = await prisma.channel.findUnique({
+        where: { id: req.params.channelId },
+        include: {
+          workspace: {
+            include: {
+              members: {
+                where: { userId: req.userId },
+              },
+            },
+          },
+        },
+      })
+
+      if (!channel) {
+        throw new AppError('Channel not found', 404, 'NOT_FOUND')
+      }
+
+      // Check if requester is a member of the channel
+      const requesterMembership = await prisma.channelMember.findUnique({
+        where: {
+          userId_channelId: {
+            userId: req.userId!,
+            channelId: channel.id,
+          },
+        },
+      })
+
+      if (!requesterMembership) {
+        throw new AppError('You must be a member of the channel to add members', 403, 'FORBIDDEN')
+      }
+
+      const { userId } = req.body
+
+      // Check if target user is a workspace member
+      const targetWorkspaceMember = await prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: {
+            userId,
+            workspaceId: channel.workspaceId,
+          },
+        },
+      })
+
+      if (!targetWorkspaceMember) {
+        throw new AppError('User must be a workspace member', 400, 'VALIDATION_ERROR')
+      }
+
+      // Check if already a member
+      const existing = await prisma.channelMember.findUnique({
+        where: {
+          userId_channelId: {
+            userId,
+            channelId: channel.id,
+          },
+        },
+      })
+
+      if (existing) {
+        throw new AppError('User is already a member', 409, 'CONFLICT')
+      }
+
+      // Add member
+      await prisma.channelMember.create({
+        data: {
+          userId,
+          channelId: channel.id,
+        },
+      })
+
+      // Get the added user details
+      const addedUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          displayName: true,
+          avatarUrl: true,
+          status: true,
+        },
+      })
+
+      // Notify the added user via socket
+      io.to(`user:${userId}`).emit('channel:added', {
+        channelId: channel.id,
+        channelName: channel.name,
+        workspaceId: channel.workspaceId,
+      })
+
+      res.status(201).json({
+        message: 'Member added successfully',
+        member: addedUser,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
 // Get channel members
 router.get('/:channelId/members', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

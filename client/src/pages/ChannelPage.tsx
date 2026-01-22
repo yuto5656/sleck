@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Hash, Lock, Settings, Users } from 'lucide-react'
+import { Hash, Lock, Settings, Users, UserPlus } from 'lucide-react'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useMessageStore } from '../stores/messageStore'
 import { useAuthStore } from '../stores/authStore'
@@ -24,6 +24,7 @@ export default function ChannelPage() {
   const [typingUsers, setTypingUsers] = useState<string[]>([])
   const [showMembers, setShowMembers] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
 
   useEffect(() => {
     const initChannel = async () => {
@@ -159,6 +160,21 @@ export default function ChannelPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {currentChannel.isPrivate && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowInvite(true)
+                setShowMembers(true)
+                setShowSettings(false)
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium transition-colors"
+              title="メンバーを招待"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>招待</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={handleShowMembers}
@@ -215,7 +231,11 @@ export default function ChannelPage() {
       {showMembers && channelId && (
         <MembersPanel
           channelId={channelId}
-          onClose={() => setShowMembers(false)}
+          onClose={() => {
+            setShowMembers(false)
+            setShowInvite(false)
+          }}
+          initialShowInvite={showInvite}
         />
       )}
 

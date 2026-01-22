@@ -1,14 +1,14 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { Phone, Video, MoreVertical, Circle } from 'lucide-react'
+import { Circle } from 'lucide-react'
 import clsx from 'clsx'
-import { format } from 'date-fns'
 import { useDMStore } from '../stores/dmStore'
 import { socketService } from '../services/socket'
 import { useAuthStore } from '../stores/authStore'
 import { getStatusColor } from '../utils/statusColors'
-import { formatDateDivider, shouldShowDateDivider } from '../utils/dateUtils'
+import { formatDateDivider, shouldShowDateDivider, shouldShowMessageHeader } from '../utils/dateUtils'
 import MessageInput from '../components/MessageInput'
+import DMMessageItem from '../components/DMMessageItem'
 
 export default function DMPage() {
   const { dmId } = useParams<{ dmId: string }>()
@@ -93,58 +93,69 @@ export default function DMPage() {
     }
   }, [dmMessages, autoScroll])
 
+  // Memoize date/time calculations
+  const messageMetadata = useMemo(() => {
+    const metadata = new Map<string, { dateString: string; timestamp: number }>()
+    dmMessages.forEach((msg) => {
+      const date = new Date(msg.createdAt)
+      metadata.set(msg.id, {
+        dateString: date.toDateString(),
+        timestamp: date.getTime(),
+      })
+    })
+    return metadata
+  }, [dmMessages])
+
+  const getShowHeader = useCallback((currentSenderId: string, currentTimestamp: number, previousSenderId?: string, previousTimestamp?: number) => {
+    return shouldShowMessageHeader(currentSenderId, currentTimestamp, previousSenderId, previousTimestamp)
+  }, [])
+
   if (!currentDM) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 bg-surface-50 dark:bg-gray-900">
-        会話を選択してチャットを始めましょう
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary-100 to-accent-100 dark:from-primary-900 dark:to-accent-900 flex items-center justify-center">
+            <Circle className="w-8 h-8 text-primary-500" />
+          </div>
+          <p className="font-medium">会話を選択してチャットを始めましょう</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-surface-50 dark:bg-gray-900">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-surface-50 dark:bg-gray-900">
       {/* DM header */}
-      <div className="h-14 border-b dark:border-gray-700 flex items-center justify-between px-4 bg-white dark:bg-gray-800">
+      <div className="h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-surface-200 dark:border-gray-700 flex items-center justify-between px-6 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-9 h-9 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-sm font-semibold text-white">
               {currentDM.participant.avatarUrl ? (
                 <img
                   src={currentDM.participant.avatarUrl}
                   alt={currentDM.participant.displayName}
-                  className="w-full h-full rounded object-cover"
+                  className="w-full h-full rounded-xl object-cover"
                 />
               ) : (
                 currentDM.participant.displayName.charAt(0).toUpperCase()
               )}
             </div>
-            <Circle
+            <div
               className={clsx(
-                'absolute -bottom-0.5 -right-0.5 w-3 h-3 fill-current',
-                getStatusColor(currentDM.participant.status, 'text')
+                'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800',
+                getStatusColor(currentDM.participant.status)
               )}
             />
           </div>
           <div>
-            <h1 className="font-bold text-gray-900 dark:text-white">{currentDM.participant.displayName}</h1>
+            <h1 className="font-semibold text-lg text-gray-900 dark:text-white">{currentDM.participant.displayName}</h1>
             <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{currentDM.participant.status}</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="音声通話">
-            <Phone className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="ビデオ通話">
-            <Video className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" title="その他">
-            <MoreVertical className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div ref={messagesRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-2">
+      <div ref={messagesRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto px-4 py-2">
         {isLoading && dmHasMore && (
           <div className="text-center py-2 text-gray-500 dark:text-gray-400">メッセージを読み込み中...</div>
         )}
@@ -152,7 +163,14 @@ export default function DMPage() {
         {dmMessages.map((message, index) => {
           const previous = dmMessages[index - 1]
           const showDateDivider = shouldShowDateDivider(message.createdAt, previous?.createdAt)
-          const isOwn = message.sender.id === user?.id
+          const currentMeta = messageMetadata.get(message.id)
+          const previousMeta = previous ? messageMetadata.get(previous.id) : undefined
+          const showHeader = getShowHeader(
+            message.sender.id,
+            currentMeta?.timestamp || 0,
+            previous?.sender.id,
+            previousMeta?.timestamp
+          )
 
           return (
             <div key={message.id}>
@@ -166,61 +184,46 @@ export default function DMPage() {
                 </div>
               )}
 
-              <div className={clsx('flex gap-2 mb-2', isOwn && 'flex-row-reverse')}>
-                <div className="w-8 h-8 rounded bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-200">
-                  {message.sender.avatarUrl ? (
-                    <img
-                      src={message.sender.avatarUrl}
-                      alt={message.sender.displayName}
-                      className="w-full h-full rounded object-cover"
-                    />
-                  ) : (
-                    message.sender.displayName.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className={clsx('max-w-[70%]', isOwn && 'text-right')}>
-                  <div
-                    className={clsx(
-                      'inline-block px-3 py-2 rounded-lg',
-                      isOwn ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                    )}
-                  >
-                    <p className="break-words">{message.content}</p>
-                  </div>
-                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    <span>{format(new Date(message.createdAt), 'HH:mm')}</span>
-                    {message.isEdited && <span>（編集済み）</span>}
-                  </div>
-                </div>
-              </div>
+              <DMMessageItem
+                message={message}
+                showHeader={showHeader}
+                isOwn={message.sender.id === user?.id}
+                dmId={dmId!}
+              />
             </div>
           )
         })}
 
         {dmMessages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
-            <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mb-4 text-gray-700 dark:text-gray-300 text-2xl font-semibold">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center mb-4 text-white text-3xl font-semibold">
               {currentDM.participant.displayName.charAt(0).toUpperCase()}
             </div>
             <p className="text-lg font-medium text-gray-900 dark:text-white">{currentDM.participant.displayName}</p>
-            <p className="text-sm">会話の始まりです</p>
+            <p className="text-sm mt-1">会話の始まりです。メッセージを送信しましょう！</p>
           </div>
         )}
       </div>
 
-      {/* Typing indicator */}
-      {isTyping && (
-        <div className="px-4 py-1 text-sm text-gray-500 dark:text-gray-400">
-          {currentDM.participant.displayName}が入力中...
-        </div>
-      )}
+      {/* Typing indicator and Message input */}
+      <div className="flex-shrink-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-surface-200 dark:border-gray-700">
+        {isTyping && (
+          <div className="px-6 py-2 text-sm text-primary-600 dark:text-primary-400 flex items-center gap-2">
+            <span className="flex gap-1">
+              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </span>
+            {currentDM.participant.displayName}が入力中...
+          </div>
+        )}
 
-      {/* Message input */}
-      <MessageInput
-        dmId={dmId}
-        placeholder={`${currentDM.participant.displayName}へメッセージを送信`}
-        onSend={handleSendMessage}
-      />
+        <MessageInput
+          dmId={dmId}
+          placeholder={`${currentDM.participant.displayName}へメッセージを送信`}
+          onSend={handleSendMessage}
+        />
+      </div>
     </div>
   )
 }

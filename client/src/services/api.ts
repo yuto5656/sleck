@@ -113,6 +113,7 @@ export const channelApi = {
   joinChannel: (channelId: string) => api.post(`/channels/${channelId}/join`),
   leaveChannel: (channelId: string) => api.post(`/channels/${channelId}/leave`),
   getMembers: (channelId: string) => api.get(`/channels/${channelId}/members`),
+  addMember: (channelId: string, userId: string) => api.post(`/channels/${channelId}/members`, { userId }),
 }
 
 // Message API
