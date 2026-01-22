@@ -183,7 +183,7 @@ export default function InvitePage() {
           </button>
         ) : mode === 'choice' ? (
           <div className="space-y-4">
-            <p className="text-gray-600 dark:text-gray-400 text-center">
+            <p className="text-gray-700 dark:text-gray-300 text-center">
               参加するにはアカウントが必要です
             </p>
             <button
@@ -194,7 +194,7 @@ export default function InvitePage() {
             </button>
             <button
               onClick={() => setMode('login')}
-              className="w-full py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded font-medium hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="w-full py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded font-medium hover:bg-gray-50 dark:hover:bg-gray-600"
             >
               ログインして参加
             </button>
