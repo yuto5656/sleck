@@ -10,13 +10,10 @@ export function getAvatarUrl(avatarUrl: string | null | undefined): string | nul
     return avatarUrl
   }
 
-  // Get API base URL from environment
-  const apiUrl = import.meta.env.VITE_API_URL || ''
-
-  // If relative URL starting with /uploads, prepend API server URL
+  // If relative URL starting with /uploads, prepend server URL
   if (avatarUrl.startsWith('/uploads')) {
-    // Extract the base server URL (remove /api/v1 if present)
-    const serverUrl = apiUrl.replace(/\/api\/v1$/, '')
+    // Use VITE_SOCKET_URL as the server base URL (more reliable than parsing API URL)
+    const serverUrl = import.meta.env.VITE_SOCKET_URL || ''
     return serverUrl ? `${serverUrl}${avatarUrl}` : avatarUrl
   }
 
