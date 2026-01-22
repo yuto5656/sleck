@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, Camera } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { X, Camera, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { userApi } from '../services/api'
 import { useToast } from './Toast'
@@ -14,6 +14,48 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
   const toast = useToast()
   const [displayName, setDisplayName] = useState(user?.displayName || '')
   const [isLoading, setIsLoading] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('JPEG、PNG、GIF、WebP形式の画像を選択してください')
+      return
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('ファイルサイズは5MB以下にしてください')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    try {
+      const response = await userApi.uploadAvatar(file)
+      // Update user with new avatar URL
+      if (user) {
+        setUser({ ...user, avatarUrl: response.data.avatarUrl })
+      }
+      toast.success('アバターを更新しました')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'アバターのアップロードに失敗しました'))
+    } finally {
+      setIsUploadingAvatar(false)
+      // Reset input so same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,8 +92,10 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
           {/* Avatar */}
           <div className="flex justify-center">
             <div className="relative">
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-3xl font-bold text-white">
-                {user?.avatarUrl ? (
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center text-3xl font-bold text-white overflow-hidden">
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                ) : user?.avatarUrl ? (
                   <img
                     src={user.avatarUrl}
                     alt={user.displayName}
@@ -61,15 +105,27 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
                   user?.displayName?.charAt(0).toUpperCase() || '?'
                 )}
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
               <button
                 type="button"
-                className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white hover:bg-primary-600 transition-colors shadow-lg"
-                title="アバターを変更（準備中）"
+                onClick={handleAvatarClick}
+                disabled={isUploadingAvatar}
+                className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white hover:bg-primary-600 disabled:opacity-50 transition-colors shadow-lg"
+                title="アバターを変更"
               >
                 <Camera className="w-4 h-4" />
               </button>
             </div>
           </div>
+          <p className="text-center text-xs text-gray-400 dark:text-gray-500">
+            クリックして画像を変更（JPEG, PNG, GIF, WebP / 5MB以下）
+          </p>
 
           {/* Display Name */}
           <div>
