@@ -77,7 +77,7 @@ export default function InviteModal({ onClose }: InviteModalProps) {
                   type="text"
                   value={inviteUrl}
                   readOnly
-                  className="flex-1 px-3 py-2 border dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-sm text-gray-900 dark:text-white"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white"
                 />
                 <button
                   onClick={handleCopy}
