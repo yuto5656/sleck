@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, Copy, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Copy, Check, Loader2 } from 'lucide-react'
 import { workspaceApi } from '../services/api'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 
@@ -10,25 +10,26 @@ interface InviteModalProps {
 export default function InviteModal({ onClose }: InviteModalProps) {
   const { currentWorkspace } = useWorkspaceStore()
   const [inviteUrl, setInviteUrl] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
 
-  const handleCreateInvite = async () => {
-    if (!currentWorkspace) return
+  useEffect(() => {
+    const createInvite = async () => {
+      if (!currentWorkspace) return
 
-    setIsLoading(true)
-    setError('')
-
-    try {
-      const response = await workspaceApi.createInvite(currentWorkspace.id)
-      setInviteUrl(response.data.inviteUrl)
-    } catch {
-      setError('招待リンクの作成に失敗しました')
-    } finally {
-      setIsLoading(false)
+      try {
+        const response = await workspaceApi.createInvite(currentWorkspace.id)
+        setInviteUrl(response.data.inviteUrl)
+      } catch {
+        setError('招待リンクの作成に失敗しました')
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
+
+    createInvite()
+  }, [currentWorkspace])
 
   const handleCopy = async () => {
     try {
@@ -64,15 +65,11 @@ export default function InviteModal({ onClose }: InviteModalProps) {
             </div>
           )}
 
-          {!inviteUrl ? (
-            <button
-              onClick={handleCreateInvite}
-              disabled={isLoading}
-              className="w-full py-2 bg-slack-purple text-white rounded font-medium hover:bg-slack-purple-dark disabled:opacity-50"
-            >
-              {isLoading ? '作成中...' : '招待リンクを作成'}
-            </button>
-          ) : (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+            </div>
+          ) : inviteUrl ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <input
@@ -83,7 +80,7 @@ export default function InviteModal({ onClose }: InviteModalProps) {
                 />
                 <button
                   onClick={handleCopy}
-                  className="p-2 bg-slack-purple text-white rounded hover:bg-slack-purple-dark"
+                  className="p-2 bg-primary-500 text-white rounded hover:bg-primary-600"
                 >
                   {copied ? (
                     <Check className="w-5 h-5" />
@@ -96,7 +93,7 @@ export default function InviteModal({ onClose }: InviteModalProps) {
                 このリンクは7日間有効です
               </p>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="p-4 border-t bg-gray-50 rounded-b-lg">
