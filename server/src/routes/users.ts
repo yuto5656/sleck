@@ -1,11 +1,16 @@
 import { Router, Response, NextFunction } from 'express'
 import { body, validationResult } from 'express-validator'
-import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { prisma } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import multer from 'multer'
 import { uploadAvatar } from '../services/supabaseStorage'
+
+// Generate a secure random token
+const generateResetToken = () => {
+  return crypto.randomBytes(32).toString('hex')
+}
 
 const router = Router()
 
@@ -274,18 +279,12 @@ router.patch(
   }
 )
 
-// Reset user password (admin only)
+// Generate password reset link for user (admin only)
 router.post(
-  '/:userId/reset-password',
+  '/:userId/generate-reset-link',
   authenticate,
-  [body('newPassword').isLength({ min: 8 })],
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const errors = validationResult(req)
-      if (!errors.isEmpty()) {
-        throw new AppError('パスワードは8文字以上で入力してください', 400, 'VALIDATION_ERROR', errors.array())
-      }
-
       // Check if requester is admin
       const requester = await prisma.user.findUnique({
         where: { id: req.userId },
@@ -293,38 +292,60 @@ router.post(
       })
 
       if (!requester || requester.role !== 'admin') {
-        throw new AppError('管理者のみがパスワードをリセットできます', 403, 'FORBIDDEN')
+        throw new AppError('管理者のみがリセットリンクを生成できます', 403, 'FORBIDDEN')
       }
 
-      // Prevent resetting own password through this endpoint
+      // Prevent generating for own account
       if (req.params.userId === req.userId) {
-        throw new AppError('自分のパスワードは通常の方法で変更してください', 400, 'VALIDATION_ERROR')
+        throw new AppError('自分のリセットリンクは生成できません', 400, 'VALIDATION_ERROR')
       }
 
       // Check target user exists
       const targetUser = await prisma.user.findUnique({
         where: { id: req.params.userId },
-        select: { role: true, displayName: true },
+        select: { id: true, role: true, displayName: true },
       })
 
       if (!targetUser) {
         throw new AppError('ユーザーが見つかりません', 404, 'NOT_FOUND')
       }
 
-      // Prevent resetting admin password
+      // Prevent generating for admin
       if (targetUser.role === 'admin') {
-        throw new AppError('管理者のパスワードはリセットできません', 400, 'VALIDATION_ERROR')
+        throw new AppError('管理者のリセットリンクは生成できません', 400, 'VALIDATION_ERROR')
       }
 
-      const { newPassword } = req.body
-      const passwordHash = await bcrypt.hash(newPassword, 12)
-
-      await prisma.user.update({
-        where: { id: req.params.userId },
-        data: { passwordHash },
+      // Invalidate any existing tokens for this user
+      await prisma.passwordResetToken.updateMany({
+        where: {
+          userId: targetUser.id,
+          usedAt: null,
+        },
+        data: {
+          usedAt: new Date(),
+        },
       })
 
-      res.json({ message: `${targetUser.displayName}のパスワードをリセットしました` })
+      // Create new reset token (valid for 24 hours)
+      const token = generateResetToken()
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+      await prisma.passwordResetToken.create({
+        data: {
+          userId: targetUser.id,
+          token,
+          expiresAt,
+        },
+      })
+
+      // Generate reset URL
+      const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${token}`
+
+      res.json({
+        resetUrl,
+        displayName: targetUser.displayName,
+        expiresAt,
+      })
     } catch (error) {
       next(error)
     }

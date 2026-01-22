@@ -39,7 +39,7 @@ const generateTokens = (userId: string) => {
   return { accessToken, refreshToken }
 }
 
-// Register (requires invite token)
+// Register (open registration with rate limiting)
 // Extra strict rate limiting: 3 requests per 5 minutes
 router.post(
   '/register',
@@ -48,7 +48,7 @@ router.post(
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 8 }),
     body('displayName').trim().isLength({ min: 1, max: 100 }),
-    body('inviteToken').notEmpty().withMessage('招待トークンが必要です'),
+    body('inviteToken').optional(), // Optional: if provided, join that workspace
   ],
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -59,23 +59,41 @@ router.post(
 
       const { email, password, displayName, inviteToken } = req.body
 
-      // Validate invite token
-      const invite = await prisma.workspaceInvite.findUnique({
-        where: { token: inviteToken },
-        include: { workspace: true },
-      })
-
-      if (!invite) {
-        throw new AppError('無効な招待トークンです', 400, 'INVALID_INVITE')
-      }
-
-      if (invite.expiresAt < new Date()) {
-        throw new AppError('招待リンクの有効期限が切れています', 400, 'INVITE_EXPIRED')
-      }
-
       const existingUser = await prisma.user.findUnique({ where: { email } })
       if (existingUser) {
-        throw new AppError('Email already exists', 409, 'CONFLICT')
+        throw new AppError('このメールアドレスは既に使用されています', 409, 'CONFLICT')
+      }
+
+      // Determine which workspace to join
+      let workspaceId: string | null = null
+
+      if (inviteToken) {
+        // If invite token provided, validate and use that workspace
+        const invite = await prisma.workspaceInvite.findUnique({
+          where: { token: inviteToken },
+          include: { workspace: true },
+        })
+
+        if (!invite) {
+          throw new AppError('無効な招待トークンです', 400, 'INVALID_INVITE')
+        }
+
+        if (invite.expiresAt < new Date()) {
+          throw new AppError('招待リンクの有効期限が切れています', 400, 'INVITE_EXPIRED')
+        }
+
+        workspaceId = invite.workspaceId
+      } else {
+        // No invite token: join the default (first) workspace
+        const defaultWorkspace = await prisma.workspace.findFirst({
+          orderBy: { createdAt: 'asc' },
+        })
+
+        if (!defaultWorkspace) {
+          throw new AppError('ワークスペースが存在しません。管理者に連絡してください。', 400, 'NO_WORKSPACE')
+        }
+
+        workspaceId = defaultWorkspace.id
       }
 
       const passwordHash = await bcrypt.hash(password, 12)
@@ -103,7 +121,7 @@ router.post(
         await tx.workspaceMember.create({
           data: {
             userId: user.id,
-            workspaceId: invite.workspaceId,
+            workspaceId: workspaceId!,
             role: 'member',
           },
         })
@@ -111,7 +129,7 @@ router.post(
         // Add user to general channel
         const generalChannel = await tx.channel.findFirst({
           where: {
-            workspaceId: invite.workspaceId,
+            workspaceId: workspaceId!,
             name: { equals: 'general', mode: 'insensitive' },
           },
         })

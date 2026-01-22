@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Shield, ShieldCheck, User as UserIcon, Trash2, KeyRound } from 'lucide-react'
+import { X, Shield, ShieldCheck, User as UserIcon, Trash2, KeyRound, Copy, Check } from 'lucide-react'
 import { userApi } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
 import { getStatusColor } from '../utils/statusColors'
@@ -45,9 +45,10 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
   const [error, setError] = useState<string | null>(null)
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
-  const [resetPasswordUser, setResetPasswordUser] = useState<UserData | null>(null)
-  const [newPassword, setNewPassword] = useState('')
-  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [resetLinkUser, setResetLinkUser] = useState<UserData | null>(null)
+  const [resetLink, setResetLink] = useState<string | null>(null)
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
 
   const loadUsers = async () => {
     setIsLoading(true)
@@ -79,20 +80,39 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
     }
   }
 
-  const handleResetPassword = async () => {
-    if (!resetPasswordUser || newPassword.length < 8) return
+  const handleGenerateResetLink = async (user: UserData) => {
+    setResetLinkUser(user)
+    setResetLink(null)
+    setIsGeneratingLink(true)
+    setIsCopied(false)
 
-    setIsResettingPassword(true)
     try {
-      await userApi.resetPassword(resetPasswordUser.id, newPassword)
-      toast.success(`${resetPasswordUser.displayName}のパスワードをリセットしました`)
-      setResetPasswordUser(null)
-      setNewPassword('')
+      const response = await userApi.generateResetLink(user.id)
+      setResetLink(response.data.resetUrl)
     } catch (err) {
-      toast.error(getErrorMessage(err, 'パスワードのリセットに失敗しました'))
+      toast.error(getErrorMessage(err, 'リセットリンクの生成に失敗しました'))
+      setResetLinkUser(null)
     } finally {
-      setIsResettingPassword(false)
+      setIsGeneratingLink(false)
     }
+  }
+
+  const handleCopyLink = async () => {
+    if (!resetLink) return
+    try {
+      await navigator.clipboard.writeText(resetLink)
+      setIsCopied(true)
+      toast.success('リンクをコピーしました')
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch {
+      toast.error('コピーに失敗しました')
+    }
+  }
+
+  const handleCloseResetModal = () => {
+    setResetLinkUser(null)
+    setResetLink(null)
+    setIsCopied(false)
   }
 
   const handleDeleteUser = async (user: UserData) => {
@@ -202,10 +222,10 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
                         </select>
                         <button
                           type="button"
-                          onClick={() => setResetPasswordUser(user)}
+                          onClick={() => handleGenerateResetLink(user)}
                           disabled={deletingUserId === user.id}
                           className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg disabled:opacity-50 transition-colors"
-                          title="パスワードをリセット"
+                          title="パスワードリセットリンクを生成"
                         >
                           <KeyRound className="w-4 h-4" />
                         </button>
@@ -247,38 +267,49 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
     </div>
   )
 
-  const passwordResetModal = resetPasswordUser && (
+  const resetLinkModal = resetLinkUser && (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-lg w-full mx-4">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          パスワードリセット
+          パスワードリセットリンク
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          「{resetPasswordUser.displayName}」の新しいパスワードを入力してください
+          「{resetLinkUser.displayName}」にこのリンクを送ってください。ユーザー自身が新しいパスワードを設定できます。
         </p>
-        <input
-          type="password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="新しいパスワード（8文字以上）"
-          className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-4"
-          minLength={8}
-        />
-        <div className="flex justify-end gap-2">
+        {isGeneratingLink ? (
+          <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+            リンクを生成中...
+          </div>
+        ) : resetLink ? (
+          <>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={resetLink}
+                readOnly
+                className="flex-1 px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              />
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
+              >
+                {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {isCopied ? 'コピー済み' : 'コピー'}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+              ※ このリンクは24時間有効です
+            </p>
+          </>
+        ) : null}
+        <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => { setResetPasswordUser(null); setNewPassword('') }}
+            onClick={handleCloseResetModal}
             className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
           >
-            キャンセル
-          </button>
-          <button
-            type="button"
-            onClick={handleResetPassword}
-            disabled={newPassword.length < 8 || isResettingPassword}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isResettingPassword ? 'リセット中...' : 'リセット'}
+            閉じる
           </button>
         </div>
       </div>
@@ -288,7 +319,7 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
   return (
     <>
       {createPortal(modalContent, document.body)}
-      {resetPasswordUser && createPortal(passwordResetModal, document.body)}
+      {resetLinkUser && createPortal(resetLinkModal, document.body)}
     </>
   )
 }

@@ -95,7 +95,7 @@ export default api
 
 // Auth API
 export const authApi = {
-  register: (data: { email: string; password: string; displayName: string; inviteToken: string }) =>
+  register: (data: { email: string; password: string; displayName: string; inviteToken?: string }) =>
     api.post('/auth/register', data),
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data),
@@ -127,8 +127,8 @@ export const userApi = {
   updateRole: (userId: string, role: 'deputy_admin' | 'member') =>
     api.patch(`/users/${userId}/role`, { role }),
   deleteUser: (userId: string) => api.delete(`/users/${userId}`),
-  resetPassword: (userId: string, newPassword: string) =>
-    api.post(`/users/${userId}/reset-password`, { newPassword }),
+  generateResetLink: (userId: string) =>
+    api.post(`/users/${userId}/generate-reset-link`),
 }
 
 // Workspace API
