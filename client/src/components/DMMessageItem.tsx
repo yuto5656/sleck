@@ -8,73 +8,15 @@ import { useAuthStore } from '../stores/authStore'
 import { useConfirmDialog } from './ConfirmDialog'
 import { useToast } from './Toast'
 import { getErrorMessage } from '../utils/errorUtils'
+import { formatMentions } from '../utils/mentionUtils'
 import EmojiPicker from 'emoji-picker-react'
-
-// Convert text with newlines to React nodes with <br /> elements
-function formatNewlines(text: string, keyPrefix: string): React.ReactNode[] {
-  const lines = text.split('\n')
-  const result: React.ReactNode[] = []
-
-  lines.forEach((line, index) => {
-    if (index > 0) {
-      result.push(<br key={`${keyPrefix}-br-${index}`} />)
-    }
-    if (line) {
-      result.push(line)
-    }
-  })
-
-  return result
-}
-
-// Format message content with mention highlighting
-function formatMentions(content: string, currentUserName?: string): React.ReactNode[] {
-  const mentionRegex = /@(?:<([^>]+)>|(\S+))/g
-  const parts: React.ReactNode[] = []
-  let lastIndex = 0
-  let match
-  let partIndex = 0
-
-  while ((match = mentionRegex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      const textBefore = content.slice(lastIndex, match.index)
-      parts.push(...formatNewlines(textBefore, `text-${partIndex++}`))
-    }
-
-    const mentionName = match[1] || match[2]
-    const displayText = match[1] ? match[1] : match[2]
-    const isSelfMention = currentUserName && mentionName.toLowerCase() === currentUserName.toLowerCase()
-
-    parts.push(
-      <span
-        key={`mention-${match.index}`}
-        className={clsx(
-          'px-1 rounded font-medium',
-          isSelfMention
-            ? 'bg-yellow-200 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-200'
-            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-        )}
-      >
-        @{displayText}さん
-      </span>
-    )
-
-    lastIndex = match.index + match[0].length
-  }
-
-  if (lastIndex < content.length) {
-    const textAfter = content.slice(lastIndex)
-    parts.push(...formatNewlines(textAfter, `text-${partIndex}`))
-  }
-
-  return parts.length > 0 ? parts : formatNewlines(content, 'text-0')
-}
 
 interface DMMessageItemProps {
   message: DMMessage
   showHeader: boolean
   isOwn: boolean
   dmId: string
+  participantNames: string[] // Valid user names for mention validation
 }
 
 function arePropsEqual(prevProps: DMMessageItemProps, nextProps: DMMessageItemProps) {
@@ -83,11 +25,12 @@ function arePropsEqual(prevProps: DMMessageItemProps, nextProps: DMMessageItemPr
     prevProps.message.content === nextProps.message.content &&
     prevProps.message.isEdited === nextProps.message.isEdited &&
     prevProps.showHeader === nextProps.showHeader &&
-    prevProps.isOwn === nextProps.isOwn
+    prevProps.isOwn === nextProps.isOwn &&
+    prevProps.participantNames.length === nextProps.participantNames.length
   )
 }
 
-const DMMessageItem = memo(function DMMessageItem({ message, showHeader, isOwn, dmId }: DMMessageItemProps) {
+const DMMessageItem = memo(function DMMessageItem({ message, showHeader, isOwn, dmId, participantNames }: DMMessageItemProps) {
   const { user } = useAuthStore()
   const { editMessage, deleteMessage } = useDMStore()
   const { showConfirm } = useConfirmDialog()
@@ -216,7 +159,7 @@ const DMMessageItem = memo(function DMMessageItem({ message, showHeader, isOwn, 
             </div>
           ) : (
             <div className="text-gray-800 dark:text-gray-200 break-words">
-              {formatMentions(message.content, user?.displayName)}
+              {formatMentions(message.content, participantNames, user?.displayName)}
             </div>
           )}
         </div>

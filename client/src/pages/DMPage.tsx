@@ -110,6 +110,14 @@ export default function DMPage() {
     return shouldShowMessageHeader(currentSenderId, currentTimestamp, previousSenderId, previousTimestamp)
   }, [])
 
+  // Get participant names for mention validation (current user + DM participant)
+  const participantNames = useMemo(() => {
+    const names: string[] = []
+    if (user) names.push(user.displayName)
+    if (currentDM) names.push(currentDM.participant.displayName)
+    return names
+  }, [user, currentDM])
+
   if (!currentDM) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 bg-surface-50 dark:bg-gray-900">
@@ -189,6 +197,7 @@ export default function DMPage() {
                 showHeader={showHeader}
                 isOwn={message.sender.id === user?.id}
                 dmId={dmId!}
+                participantNames={participantNames}
               />
             </div>
           )

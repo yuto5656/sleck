@@ -5,75 +5,12 @@ import clsx from 'clsx'
 import { Message } from '../types'
 import { useMessageStore } from '../stores/messageStore'
 import { useAuthStore } from '../stores/authStore'
+import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useConfirmDialog } from './ConfirmDialog'
 import { useToast } from './Toast'
 import { getErrorMessage } from '../utils/errorUtils'
+import { formatMentions } from '../utils/mentionUtils'
 import EmojiPicker from 'emoji-picker-react'
-
-// Convert text with newlines to React nodes with <br /> elements
-function formatNewlines(text: string, keyPrefix: string): React.ReactNode[] {
-  const lines = text.split('\n')
-  const result: React.ReactNode[] = []
-
-  lines.forEach((line, index) => {
-    if (index > 0) {
-      result.push(<br key={`${keyPrefix}-br-${index}`} />)
-    }
-    if (line) {
-      result.push(line)
-    }
-  })
-
-  return result
-}
-
-// Format message content with mention highlighting
-// Supports both @name and @<name with spaces> formats
-function formatMentions(content: string, currentUserName?: string): React.ReactNode[] {
-  // Match @<name with spaces> or @name (no spaces)
-  const mentionRegex = /@(?:<([^>]+)>|(\S+))/g
-  const parts: React.ReactNode[] = []
-  let lastIndex = 0
-  let match
-  let partIndex = 0
-
-  while ((match = mentionRegex.exec(content)) !== null) {
-    // Add text before mention (with newline handling)
-    if (match.index > lastIndex) {
-      const textBefore = content.slice(lastIndex, match.index)
-      parts.push(...formatNewlines(textBefore, `text-${partIndex++}`))
-    }
-
-    // match[1] is name in brackets, match[2] is name without brackets
-    const mentionName = match[1] || match[2]
-    const displayText = match[1] ? match[1] : match[2]
-    const isSelfMention = currentUserName && mentionName.toLowerCase() === currentUserName.toLowerCase()
-
-    parts.push(
-      <span
-        key={`mention-${match.index}`}
-        className={clsx(
-          'px-1 rounded font-medium',
-          isSelfMention
-            ? 'bg-yellow-200 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-200'
-            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-        )}
-      >
-        @{displayText}さん
-      </span>
-    )
-
-    lastIndex = match.index + match[0].length
-  }
-
-  // Add remaining text (with newline handling)
-  if (lastIndex < content.length) {
-    const textAfter = content.slice(lastIndex)
-    parts.push(...formatNewlines(textAfter, `text-${partIndex}`))
-  }
-
-  return parts.length > 0 ? parts : formatNewlines(content, 'text-0')
-}
 
 interface MessageItemProps {
   message: Message
@@ -97,7 +34,11 @@ function arePropsEqual(prevProps: MessageItemProps, nextProps: MessageItemProps)
 
 const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOpenThread }: MessageItemProps) {
   const { user } = useAuthStore()
+  const { members } = useWorkspaceStore()
   const { addReaction, removeReaction, editMessage, deleteMessage } = useMessageStore()
+
+  // Get valid user names for mention validation
+  const validUserNames = members.map(m => m.displayName)
   const { showConfirm } = useConfirmDialog()
   const toast = useToast()
   const [showActions, setShowActions] = useState(false)
@@ -236,7 +177,7 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
             </div>
           ) : (
             <div className="text-gray-800 dark:text-gray-200 break-words">
-              {formatMentions(message.content, user?.displayName)}
+              {formatMentions(message.content, validUserNames, user?.displayName)}
             </div>
           )}
 
