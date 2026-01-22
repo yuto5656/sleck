@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Notification as AppNotification } from '../types'
 import { notificationApi } from '../services/api'
 import { socketService } from '../services/socket'
+import { playNotificationSoundIfEnabled } from '../utils/notificationSound'
 
 interface NotificationState {
   notifications: AppNotification[]
@@ -71,6 +72,9 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       notifications: [notification, ...state.notifications],
       unreadCount: state.unreadCount + 1,
     }))
+
+    // Play notification sound
+    playNotificationSoundIfEnabled()
 
     // Show browser notification if permitted
     if (Notification.permission === 'granted') {

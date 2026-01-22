@@ -62,7 +62,12 @@ export default function Sidebar() {
 
           {channelsExpanded && (
             <div className="mt-2 space-y-0.5">
-              {channels.map((channel) => {
+              {[...channels].sort((a, b) => {
+                // General channel always first
+                if (a.name.toLowerCase() === 'general') return -1
+                if (b.name.toLowerCase() === 'general') return 1
+                return a.name.localeCompare(b.name)
+              }).map((channel) => {
                 const isActive = currentChannel?.id === channel.id && location.pathname.startsWith('/channel')
                 const isUnread = unreadChannels.has(channel.id)
                 return (

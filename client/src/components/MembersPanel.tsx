@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
-import { X, UserPlus, Search } from 'lucide-react'
+import { X, UserPlus, Search, Shield, ShieldCheck } from 'lucide-react'
 import { channelApi, workspaceApi } from '../services/api'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { getStatusColor } from '../utils/statusColors'
 import { getErrorMessage } from '../utils/errorUtils'
 import { useToast } from './Toast'
+import { UserRole } from '../types'
 
 export interface ChannelMember {
   id: string
   displayName: string
   avatarUrl: string | null
   status: string
+  role: UserRole
   joinedAt: string
 }
 
@@ -222,27 +224,41 @@ export default function MembersPanel({ channelId, onClose, initialShowInvite = f
           ) : (
             <div className="space-y-3">
               {members.map((member) => (
-                <div key={member.id} className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
-                      {member.avatarUrl ? (
-                        <img
-                          src={member.avatarUrl}
-                          alt={member.displayName}
-                          className="w-full h-full rounded object-cover"
-                        />
-                      ) : (
-                        member.displayName.charAt(0).toUpperCase()
-                      )}
+                <div key={member.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-200">
+                        {member.avatarUrl ? (
+                          <img
+                            src={member.avatarUrl}
+                            alt={member.displayName}
+                            className="w-full h-full rounded object-cover"
+                          />
+                        ) : (
+                          member.displayName.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div
+                        className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getStatusColor(member.status)}`}
+                      />
                     </div>
-                    <div
-                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${getStatusColor(member.status)}`}
-                    />
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{member.displayName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{member.status}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{member.displayName}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{member.status}</p>
-                  </div>
+                  {member.role === 'admin' && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30" title="管理者">
+                      <Shield className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" />
+                      <span className="text-xs font-medium text-yellow-700 dark:text-yellow-300">管理者</span>
+                    </div>
+                  )}
+                  {member.role === 'deputy_admin' && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30" title="代理管理者">
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">代理管理者</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

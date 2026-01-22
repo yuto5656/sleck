@@ -769,6 +769,7 @@ router.get('/:channelId/members', authenticate, async (req: AuthRequest, res: Re
             displayName: true,
             avatarUrl: true,
             status: true,
+            role: true,
           },
         },
       },
