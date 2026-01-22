@@ -223,7 +223,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
       )}
 
       <div className={clsx(
-        'flex items-end gap-2 border rounded-lg p-2',
+        'flex items-center gap-2 border rounded-lg p-2',
         isDragActive && 'border-blue-400 bg-blue-50'
       )}>
         <input {...getInputProps()} />
@@ -231,7 +231,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
         <button
           type="button"
           onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
-          className="p-2 hover:bg-gray-100 rounded"
+          className="p-2 hover:bg-gray-100 rounded flex-shrink-0"
           title="ファイルを添付"
         >
           <Paperclip className="w-5 h-5 text-gray-500" />
@@ -243,7 +243,7 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
           onChange={handleContentChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 resize-none outline-none max-h-32"
+          className="flex-1 resize-none outline-none max-h-32 py-1 leading-normal"
           rows={1}
           disabled={isSending}
         />
