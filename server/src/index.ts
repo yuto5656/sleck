@@ -38,6 +38,9 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST'],
     credentials: true,
   },
+  // Increase ping interval and timeout to prevent premature disconnection
+  pingInterval: 25000,  // Send ping every 25 seconds
+  pingTimeout: 120000,  // Wait 2 minutes before considering connection dead
 })
 
 export const prisma = new PrismaClient()

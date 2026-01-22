@@ -4,28 +4,50 @@ import { Message, DMMessage } from '../types'
 class SocketService {
   private socket: Socket | null = null
   private listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map()
+  private token: string | null = null
+  private activityInterval: ReturnType<typeof setInterval> | null = null
 
   connect(token: string) {
     if (this.socket?.connected) {
       return
     }
 
+    this.token = token
+
     this.socket = io(import.meta.env.VITE_SOCKET_URL || window.location.origin, {
       auth: { token },
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     })
 
     this.socket.on('connect', () => {
       console.log('Socket connected')
+      // Restore online status on reconnection
+      this.updatePresence('online')
     })
 
-    this.socket.on('disconnect', () => {
-      console.log('Socket disconnected')
+    this.socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason)
+      // If server disconnected us, attempt to reconnect
+      if (reason === 'io server disconnect') {
+        this.socket?.connect()
+      }
+    })
+
+    this.socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error)
     })
 
     this.socket.on('error', (error) => {
       console.error('Socket error:', error)
     })
+
+    // Start activity tracking to keep connection alive
+    this.startActivityTracking()
 
     // Re-register all listeners
     this.listeners.forEach((callbacks, event) => {
@@ -36,9 +58,68 @@ class SocketService {
   }
 
   disconnect() {
+    this.stopActivityTracking()
     if (this.socket) {
       this.socket.disconnect()
       this.socket = null
+    }
+    this.token = null
+  }
+
+  private startActivityTracking() {
+    // Send heartbeat every 30 seconds to keep connection alive
+    this.activityInterval = setInterval(() => {
+      if (this.socket?.connected) {
+        this.emit('heartbeat')
+      }
+    }, 30000)
+
+    // Track user activity and update presence
+    const handleActivity = () => {
+      if (this.socket?.connected) {
+        this.updatePresence('online')
+      }
+    }
+
+    // Listen for user activity events
+    document.addEventListener('mousemove', handleActivity, { passive: true })
+    document.addEventListener('keydown', handleActivity, { passive: true })
+    document.addEventListener('click', handleActivity, { passive: true })
+    document.addEventListener('scroll', handleActivity, { passive: true })
+
+    // Throttle activity updates to once per minute
+    let lastActivity = Date.now()
+    const throttledActivity = () => {
+      const now = Date.now()
+      if (now - lastActivity > 60000) {
+        lastActivity = now
+        handleActivity()
+      }
+    }
+
+    // Replace direct handlers with throttled version
+    document.removeEventListener('mousemove', handleActivity)
+    document.removeEventListener('keydown', handleActivity)
+    document.removeEventListener('click', handleActivity)
+    document.removeEventListener('scroll', handleActivity)
+
+    document.addEventListener('mousemove', throttledActivity, { passive: true })
+    document.addEventListener('keydown', throttledActivity, { passive: true })
+    document.addEventListener('click', throttledActivity, { passive: true })
+    document.addEventListener('scroll', throttledActivity, { passive: true })
+
+    // Handle visibility change (tab switching)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && this.socket?.connected) {
+        this.updatePresence('online')
+      }
+    })
+  }
+
+  private stopActivityTracking() {
+    if (this.activityInterval) {
+      clearInterval(this.activityInterval)
+      this.activityInterval = null
     }
   }
 

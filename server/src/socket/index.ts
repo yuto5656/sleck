@@ -138,19 +138,35 @@ export function setupSocketHandlers(io: Server) {
       }
     })
 
+    // Handle heartbeat from client to keep connection alive
+    socket.on('heartbeat', async () => {
+      // Update last activity timestamp (optional: could store this in DB or memory)
+      // For now, just acknowledge the heartbeat to keep the connection fresh
+      socket.emit('heartbeat:ack')
+    })
+
     // Handle presence update
     socket.on('presence:update', async (status: 'online' | 'away' | 'dnd') => {
-      await prisma.user.update({
+      // Get current status to avoid unnecessary DB updates
+      const currentUser = await prisma.user.findUnique({
         where: { id: socket.userId },
-        data: { status },
+        select: { status: true },
       })
 
-      // Broadcast to all workspaces
-      for (const membership of memberships) {
-        socket.to(`workspace:${membership.workspaceId}`).emit('user:status', {
-          userId: socket.userId,
-          status,
+      // Only update if status actually changed
+      if (currentUser?.status !== status) {
+        await prisma.user.update({
+          where: { id: socket.userId },
+          data: { status },
         })
+
+        // Broadcast to all workspaces
+        for (const membership of memberships) {
+          socket.to(`workspace:${membership.workspaceId}`).emit('user:status', {
+            userId: socket.userId,
+            status,
+          })
+        }
       }
     })
 
