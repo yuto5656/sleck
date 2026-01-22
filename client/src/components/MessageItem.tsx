@@ -59,7 +59,7 @@ function formatMentions(content: string, currentUserName?: string): React.ReactN
             : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
         )}
       >
-        @{displayText}
+        @{displayText}さん
       </span>
     )
 
@@ -79,6 +79,7 @@ interface MessageItemProps {
   message: Message
   showHeader: boolean
   isOwn: boolean
+  onOpenThread?: (message: Message) => void
 }
 
 // Custom comparison function for React.memo
@@ -88,12 +89,13 @@ function arePropsEqual(prevProps: MessageItemProps, nextProps: MessageItemProps)
     prevProps.message.content === nextProps.message.content &&
     prevProps.message.isEdited === nextProps.message.isEdited &&
     prevProps.message.reactions.length === nextProps.message.reactions.length &&
+    prevProps.message.threadCount === nextProps.message.threadCount &&
     prevProps.showHeader === nextProps.showHeader &&
     prevProps.isOwn === nextProps.isOwn
   )
 }
 
-const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: MessageItemProps) {
+const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOpenThread }: MessageItemProps) {
   const { user } = useAuthStore()
   const { addReaction, removeReaction, editMessage, deleteMessage } = useMessageStore()
   const { showConfirm } = useConfirmDialog()
@@ -292,9 +294,13 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
 
           {/* Thread indicator */}
           {message.threadCount > 0 && (
-            <button type="button" className="mt-1 flex items-center gap-1 text-sm text-blue-600 hover:underline">
+            <button
+              type="button"
+              onClick={() => onOpenThread?.(message)}
+              className="mt-1 flex items-center gap-1 text-sm text-blue-600 hover:underline"
+            >
               <MessageSquare className="w-4 h-4" />
-              <span>{message.threadCount} replies</span>
+              <span>{message.threadCount} 件の返信</span>
             </button>
           )}
         </div>
@@ -311,7 +317,12 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn }: Me
           >
             <Smile className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
-          <button type="button" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded" title="Reply in thread">
+          <button
+            type="button"
+            onClick={() => onOpenThread?.(message)}
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
+            title="スレッドで返信"
+          >
             <MessageSquare className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
           {isOwn && (

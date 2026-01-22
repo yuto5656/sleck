@@ -9,9 +9,10 @@ interface MessageListProps {
   isLoading: boolean
   hasMore: boolean
   onLoadMore: () => void
+  onOpenThread?: (message: Message) => void
 }
 
-export default function MessageList({ messages, isLoading, hasMore, onLoadMore }: MessageListProps) {
+export default function MessageList({ messages, isLoading, hasMore, onLoadMore, onOpenThread }: MessageListProps) {
   const { user } = useAuthStore()
   const listRef = useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = useState(true)
@@ -91,6 +92,7 @@ export default function MessageList({ messages, isLoading, hasMore, onLoadMore }
               message={message}
               showHeader={showHeader}
               isOwn={message.user.id === user?.id}
+              onOpenThread={onOpenThread}
             />
           </div>
         )

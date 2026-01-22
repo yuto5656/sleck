@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Users } from 'lucide-react'
 import { useWorkspaceStore } from '../stores/workspaceStore'
@@ -11,10 +11,11 @@ export default function WorkspacePage() {
   const [isCreating, setIsCreating] = useState(false)
 
   // If there's a current channel, redirect to it
-  if (currentChannel) {
-    navigate(`/channel/${currentChannel.id}`)
-    return null
-  }
+  useEffect(() => {
+    if (currentChannel) {
+      navigate(`/channel/${currentChannel.id}`, { replace: true })
+    }
+  }, [currentChannel, navigate])
 
   const handleCreateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault()

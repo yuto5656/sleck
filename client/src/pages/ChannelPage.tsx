@@ -4,12 +4,15 @@ import { Hash, Lock, Settings, Users } from 'lucide-react'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useMessageStore } from '../stores/messageStore'
 import { useAuthStore } from '../stores/authStore'
+import { useThreadStore } from '../stores/threadStore'
 import { socketService } from '../services/socket'
 import { channelApi } from '../services/api'
+import { Message } from '../types'
 import MessageList from '../components/MessageList'
 import MessageInput from '../components/MessageInput'
 import MembersPanel from '../components/MembersPanel'
 import ChannelSettingsPanel from '../components/ChannelSettingsPanel'
+import ThreadPanel from '../components/ThreadPanel'
 
 export default function ChannelPage() {
   const { channelId } = useParams<{ channelId: string }>()
@@ -17,6 +20,7 @@ export default function ChannelPage() {
   const { user } = useAuthStore()
   const { channels, currentChannel, setCurrentChannel, deleteChannel } = useWorkspaceStore()
   const { messages, isLoading, hasMore, loadMessages, sendMessage, addMessage } = useMessageStore()
+  const { parentMessage, openThread } = useThreadStore()
   const [typingUsers, setTypingUsers] = useState<string[]>([])
   const [showMembers, setShowMembers] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -105,6 +109,12 @@ export default function ChannelPage() {
     setShowMembers(false)
   }
 
+  const handleOpenThread = useCallback((message: Message) => {
+    openThread(message)
+    setShowMembers(false)
+    setShowSettings(false)
+  }, [openThread])
+
   const handleDeleteChannel = async () => {
     if (!channelId) return
     await deleteChannel(channelId)
@@ -129,7 +139,8 @@ export default function ChannelPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-surface-50 dark:bg-gray-900">
+    <div className="flex-1 flex min-h-0 overflow-hidden bg-surface-50 dark:bg-gray-900">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Channel header */}
       <div className="h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-surface-200 dark:border-gray-700 flex items-center justify-between px-6 flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -167,35 +178,37 @@ export default function ChannelPage() {
         </div>
       </div>
 
-      {/* Messages */}
-      <MessageList
-        messages={channelMessages}
-        isLoading={isLoading}
-        hasMore={channelHasMore}
-        onLoadMore={handleLoadMore}
-      />
-
-      {/* Typing indicator and Message input - fixed at bottom */}
-      <div className="flex-shrink-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-surface-200 dark:border-gray-700">
-        {typingUsers.length > 0 && (
-          <div className="px-6 py-2 text-sm text-primary-600 dark:text-primary-400 flex items-center gap-2">
-            <span className="flex gap-1">
-              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-            </span>
-            {typingUsers.length === 1
-              ? '誰かが入力中...'
-              : `${typingUsers.length}人が入力中...`}
-          </div>
-        )}
-
-        {/* Message input */}
-        <MessageInput
-          channelId={channelId}
-          placeholder={`#${currentChannel.name}へメッセージを送信`}
-          onSend={handleSendMessage}
+        {/* Messages */}
+        <MessageList
+          messages={channelMessages}
+          isLoading={isLoading}
+          hasMore={channelHasMore}
+          onLoadMore={handleLoadMore}
+          onOpenThread={handleOpenThread}
         />
+
+        {/* Typing indicator and Message input - fixed at bottom */}
+        <div className="flex-shrink-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-surface-200 dark:border-gray-700">
+          {typingUsers.length > 0 && (
+            <div className="px-6 py-2 text-sm text-primary-600 dark:text-primary-400 flex items-center gap-2">
+              <span className="flex gap-1">
+                <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </span>
+              {typingUsers.length === 1
+                ? '誰かが入力中...'
+                : `${typingUsers.length}人が入力中...`}
+            </div>
+          )}
+
+          {/* Message input */}
+          <MessageInput
+            channelId={channelId}
+            placeholder={`#${currentChannel.name}へメッセージを送信`}
+            onSend={handleSendMessage}
+          />
+        </div>
       </div>
 
       {/* Members Panel */}
@@ -213,6 +226,11 @@ export default function ChannelPage() {
           onClose={() => setShowSettings(false)}
           onDelete={handleDeleteChannel}
         />
+      )}
+
+      {/* Thread Panel */}
+      {parentMessage && channelId && (
+        <ThreadPanel channelId={channelId} />
       )}
     </div>
   )
