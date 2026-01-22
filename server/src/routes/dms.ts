@@ -48,9 +48,11 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response, next: Next
     })
 
     const result = dms.map(dm => {
-      const participant = dm.participant1Id === req.userId
-        ? dm.participant2
-        : dm.participant1
+      // For self DM, participant is the user themselves
+      const isSelfDM = dm.participant1Id === dm.participant2Id
+      const participant = isSelfDM
+        ? dm.participant1
+        : (dm.participant1Id === req.userId ? dm.participant2 : dm.participant1)
 
       return {
         id: dm.id,
@@ -80,9 +82,8 @@ router.post(
 
       const { userId } = req.body
 
-      if (userId === req.userId) {
-        throw new AppError('Cannot DM yourself', 400, 'VALIDATION_ERROR')
-      }
+      // Self DM is allowed (like Slack's note to self feature)
+      const isSelfDM = userId === req.userId
 
       // Check if user exists
       const targetUser = await prisma.user.findUnique({ where: { id: userId } })
@@ -145,9 +146,10 @@ router.post(
         })
       }
 
-      const participant = dm.participant1Id === req.userId
-        ? dm.participant2
-        : dm.participant1
+      // For self DM, participant is the user themselves
+      const participant = isSelfDM
+        ? dm.participant1
+        : (dm.participant1Id === req.userId ? dm.participant2 : dm.participant1)
 
       res.status(201).json({
         id: dm.id,

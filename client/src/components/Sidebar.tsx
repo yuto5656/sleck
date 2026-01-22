@@ -172,7 +172,74 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
           {dmsExpanded && (
             <div className="mt-2 space-y-0.5">
-              {dms.map((dm) => {
+              {/* Self DM - always at top */}
+              {user && (() => {
+                const selfDM = dms.find(dm => dm.participant.id === user.id)
+                const isActive = selfDM && currentDM?.id === selfDM.id && location.pathname.startsWith('/dm')
+                const isUnread = selfDM && unreadDMs.has(selfDM.id)
+                return (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (selfDM) {
+                        handleDMClick(selfDM)
+                      } else {
+                        // Create self DM if it doesn't exist
+                        try {
+                          const { createDM } = useDMStore.getState()
+                          const newDM = await createDM(user.id)
+                          handleDMClick(newDM)
+                        } catch {
+                          // Error handled by store
+                        }
+                      }
+                    }}
+                    className={clsx(
+                      'flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-left transition-all duration-200 border',
+                      isActive
+                        ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white shadow-glow/20 border-primary-500/30'
+                        : isUnread
+                          ? 'text-white bg-white/10 hover:bg-white/15 border-transparent'
+                          : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text border-transparent'
+                    )}
+                  >
+                    <div className="relative">
+                      <div className={clsx(
+                        'w-7 h-7 rounded-xl flex items-center justify-center text-xs font-semibold overflow-hidden',
+                        isActive
+                          ? 'bg-gradient-to-br from-emerald-400 to-cyan-500'
+                          : isUnread
+                            ? 'bg-gradient-to-br from-primary-400 to-accent-500'
+                            : 'bg-gradient-to-br from-gray-500 to-gray-600'
+                      )}>
+                        {getAvatarUrl(user.avatarUrl) ? (
+                          <img
+                            src={getAvatarUrl(user.avatarUrl)!}
+                            alt={user.displayName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          user.displayName.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div
+                        className={clsx(
+                          'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-sidebar',
+                          getStatusColor(user.status || 'online')
+                        )}
+                      />
+                    </div>
+                    <span className={clsx('truncate', isUnread ? 'font-bold' : 'font-medium')}>{user.displayName}</span>
+                    <span className="text-xs text-sidebar-text-muted ml-1">(自分)</span>
+                    {isUnread && (
+                      <div className="ml-auto w-2 h-2 rounded-full bg-primary-400" />
+                    )}
+                  </button>
+                )
+              })()}
+
+              {/* Other DMs - exclude self */}
+              {dms.filter(dm => dm.participant.id !== user?.id).map((dm) => {
                 const isActive = currentDM?.id === dm.id && location.pathname.startsWith('/dm')
                 const isUnread = unreadDMs.has(dm.id)
                 return (
