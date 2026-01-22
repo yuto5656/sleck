@@ -66,9 +66,9 @@ export default function LoginPage() {
           </div>
 
           <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-slack-purple dark:text-primary-400 hover:underline">
-              パスワードを忘れた場合
-            </Link>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              パスワードを忘れた場合は管理者に連絡してください
+            </span>
           </div>
 
           <button

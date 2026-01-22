@@ -127,6 +127,8 @@ export const userApi = {
   updateRole: (userId: string, role: 'deputy_admin' | 'member') =>
     api.patch(`/users/${userId}/role`, { role }),
   deleteUser: (userId: string) => api.delete(`/users/${userId}`),
+  resetPassword: (userId: string, newPassword: string) =>
+    api.post(`/users/${userId}/reset-password`, { newPassword }),
 }
 
 // Workspace API

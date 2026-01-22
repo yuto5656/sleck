@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Shield, ShieldCheck, User as UserIcon, Trash2 } from 'lucide-react'
+import { X, Shield, ShieldCheck, User as UserIcon, Trash2, KeyRound } from 'lucide-react'
 import { userApi } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
 import { getStatusColor } from '../utils/statusColors'
@@ -45,6 +45,9 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
   const [error, setError] = useState<string | null>(null)
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
+  const [resetPasswordUser, setResetPasswordUser] = useState<UserData | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
 
   const loadUsers = async () => {
     setIsLoading(true)
@@ -73,6 +76,22 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
       toast.error(getErrorMessage(err, 'ロールの変更に失敗しました'))
     } finally {
       setUpdatingUserId(null)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordUser || newPassword.length < 8) return
+
+    setIsResettingPassword(true)
+    try {
+      await userApi.resetPassword(resetPasswordUser.id, newPassword)
+      toast.success(`${resetPasswordUser.displayName}のパスワードをリセットしました`)
+      setResetPasswordUser(null)
+      setNewPassword('')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'パスワードのリセットに失敗しました'))
+    } finally {
+      setIsResettingPassword(false)
     }
   }
 
@@ -183,6 +202,15 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
                         </select>
                         <button
                           type="button"
+                          onClick={() => setResetPasswordUser(user)}
+                          disabled={deletingUserId === user.id}
+                          className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg disabled:opacity-50 transition-colors"
+                          title="パスワードをリセット"
+                        >
+                          <KeyRound className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleDeleteUser(user)}
                           disabled={deletingUserId === user.id}
                           className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg disabled:opacity-50 transition-colors"
@@ -219,5 +247,48 @@ export default function UserManagementPanel({ onClose }: UserManagementPanelProp
     </div>
   )
 
-  return createPortal(modalContent, document.body)
+  const passwordResetModal = resetPasswordUser && (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          パスワードリセット
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          「{resetPasswordUser.displayName}」の新しいパスワードを入力してください
+        </p>
+        <input
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="新しいパスワード（8文字以上）"
+          className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-4"
+          minLength={8}
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => { setResetPasswordUser(null); setNewPassword('') }}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            onClick={handleResetPassword}
+            disabled={newPassword.length < 8 || isResettingPassword}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isResettingPassword ? 'リセット中...' : 'リセット'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      {resetPasswordUser && createPortal(passwordResetModal, document.body)}
+    </>
+  )
 }

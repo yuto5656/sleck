@@ -1,5 +1,6 @@
 import { Router, Response, NextFunction } from 'express'
 import { body, validationResult } from 'express-validator'
+import bcrypt from 'bcryptjs'
 import { prisma } from '../index'
 import { AppError } from '../middleware/errorHandler'
 import { authenticate, AuthRequest } from '../middleware/auth'
@@ -267,6 +268,63 @@ router.patch(
       })
 
       res.json(user)
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+// Reset user password (admin only)
+router.post(
+  '/:userId/reset-password',
+  authenticate,
+  [body('newPassword').isLength({ min: 8 })],
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new AppError('パスワードは8文字以上で入力してください', 400, 'VALIDATION_ERROR', errors.array())
+      }
+
+      // Check if requester is admin
+      const requester = await prisma.user.findUnique({
+        where: { id: req.userId },
+        select: { role: true },
+      })
+
+      if (!requester || requester.role !== 'admin') {
+        throw new AppError('管理者のみがパスワードをリセットできます', 403, 'FORBIDDEN')
+      }
+
+      // Prevent resetting own password through this endpoint
+      if (req.params.userId === req.userId) {
+        throw new AppError('自分のパスワードは通常の方法で変更してください', 400, 'VALIDATION_ERROR')
+      }
+
+      // Check target user exists
+      const targetUser = await prisma.user.findUnique({
+        where: { id: req.params.userId },
+        select: { role: true, displayName: true },
+      })
+
+      if (!targetUser) {
+        throw new AppError('ユーザーが見つかりません', 404, 'NOT_FOUND')
+      }
+
+      // Prevent resetting admin password
+      if (targetUser.role === 'admin') {
+        throw new AppError('管理者のパスワードはリセットできません', 400, 'VALIDATION_ERROR')
+      }
+
+      const { newPassword } = req.body
+      const passwordHash = await bcrypt.hash(newPassword, 12)
+
+      await prisma.user.update({
+        where: { id: req.params.userId },
+        data: { passwordHash },
+      })
+
+      res.json({ message: `${targetUser.displayName}のパスワードをリセットしました` })
     } catch (error) {
       next(error)
     }
