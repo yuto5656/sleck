@@ -29,7 +29,7 @@ export default function Header() {
       <div className="flex-1 flex items-center gap-4">
         <button
           type="button"
-          onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
+          onClick={() => setShowWorkspaceMenu((prev) => !prev)}
           className="flex items-center gap-2 hover:bg-white/10 rounded-xl px-3 py-2 transition-all duration-200"
         >
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-400 to-accent-500 flex items-center justify-center shadow-glow">
@@ -60,7 +60,8 @@ export default function Header() {
       <div className="flex-1 flex items-center justify-end gap-2">
         <button
           type="button"
-          onClick={() => setShowNotifications(!showNotifications)}
+          data-notification-trigger
+          onClick={() => setShowNotifications((prev) => !prev)}
           className="relative p-2.5 hover:bg-white/10 rounded-xl transition-all duration-200"
         >
           <Bell className="w-5 h-5" />
@@ -73,7 +74,8 @@ export default function Header() {
 
         <button
           type="button"
-          onClick={() => setShowUserMenu(!showUserMenu)}
+          data-user-menu-trigger
+          onClick={() => setShowUserMenu((prev) => !prev)}
           className="flex items-center gap-2 hover:bg-white/10 rounded-xl p-1.5 transition-all duration-200"
         >
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-sm font-semibold shadow-lg ring-2 ring-white/20">
@@ -82,11 +84,11 @@ export default function Header() {
         </button>
 
         {showUserMenu && (
-          <UserMenu onClose={() => setShowUserMenu(false)} />
+          <UserMenu onClose={() => setShowUserMenu(false)} triggerSelector="[data-user-menu-trigger]" />
         )}
 
         {showNotifications && (
-          <NotificationPanel onClose={() => setShowNotifications(false)} />
+          <NotificationPanel onClose={() => setShowNotifications(false)} triggerSelector="[data-notification-trigger]" />
         )}
       </div>
 

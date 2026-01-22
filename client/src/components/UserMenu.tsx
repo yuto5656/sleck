@@ -5,22 +5,31 @@ import { getStatusColor } from '../utils/statusColors'
 
 interface UserMenuProps {
   onClose: () => void
+  triggerSelector?: string
 }
 
-export default function UserMenu({ onClose }: UserMenuProps) {
+export default function UserMenu({ onClose, triggerSelector }: UserMenuProps) {
   const { user, logout, updateStatus } = useAuthStore()
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      // Don't close if clicking the trigger button (toggle will handle it)
+      if (triggerSelector) {
+        const trigger = document.querySelector(triggerSelector)
+        if (trigger?.contains(target)) {
+          return
+        }
+      }
+      if (menuRef.current && !menuRef.current.contains(target)) {
         onClose()
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [onClose])
+  }, [onClose, triggerSelector])
 
   const handleLogout = async () => {
     await logout()

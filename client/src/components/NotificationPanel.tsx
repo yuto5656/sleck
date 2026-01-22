@@ -10,9 +10,10 @@ import { getErrorMessage } from '../utils/errorUtils'
 
 interface NotificationPanelProps {
   onClose: () => void
+  triggerSelector?: string
 }
 
-export default function NotificationPanel({ onClose }: NotificationPanelProps) {
+export default function NotificationPanel({ onClose, triggerSelector }: NotificationPanelProps) {
   const navigate = useNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
   const toast = useToast()
@@ -25,14 +26,22 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      // Don't close if clicking the trigger button (toggle will handle it)
+      if (triggerSelector) {
+        const trigger = document.querySelector(triggerSelector)
+        if (trigger?.contains(target)) {
+          return
+        }
+      }
+      if (panelRef.current && !panelRef.current.contains(target)) {
         onClose()
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [onClose])
+  }, [onClose, triggerSelector])
 
   const handleMarkAsRead = async (id: string) => {
     await markAsRead(id)
