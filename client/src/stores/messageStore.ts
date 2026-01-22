@@ -197,15 +197,34 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   },
 
   addMessage: (channelId, message) => {
-    const messages = new Map(get().messages)
+    const state = get()
+    const messages = new Map(state.messages)
     const channelMessages = messages.get(channelId) || []
 
-    // Check if message already exists
+    // Check if message already exists by ID
     if (channelMessages.some((m) => m.id === message.id)) {
       return
     }
 
-    messages.set(channelId, [...channelMessages, message])
+    // Check for pending temp messages with same content from same user (avoid duplicates during optimistic update)
+    // This handles the race condition where socket event arrives before API response
+    const hasPendingDuplicate = channelMessages.some(
+      (m) =>
+        m.id.startsWith('temp-') &&
+        m.content === message.content &&
+        m.user.id === message.user.id
+    )
+
+    if (hasPendingDuplicate) {
+      // Replace temp message with real message
+      const filteredMessages = channelMessages.filter(
+        (m) => !(m.id.startsWith('temp-') && m.content === message.content && m.user.id === message.user.id)
+      )
+      messages.set(channelId, [...filteredMessages, message])
+    } else {
+      messages.set(channelId, [...channelMessages, message])
+    }
+
     set({ messages })
   },
 

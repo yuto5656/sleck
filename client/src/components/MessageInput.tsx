@@ -177,7 +177,17 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
       const mentionName = member.displayName.includes(' ')
         ? `<${member.displayName}>`
         : member.displayName
-      const newContent = `${beforeMention}@${mentionName} ${textAfterCursor}`
+
+      // Check if the text after cursor starts with remaining part of the search
+      // This prevents duplication when user typed partial name
+      let cleanTextAfter = textAfterCursor
+      const partialSearch = mentionMatch[1] // What user typed after @
+      if (partialSearch && textAfterCursor.toLowerCase().startsWith(partialSearch.toLowerCase())) {
+        // This shouldn't happen normally, but handle edge case
+        cleanTextAfter = textAfterCursor.slice(partialSearch.length)
+      }
+
+      const newContent = `${beforeMention}@${mentionName} ${cleanTextAfter}`
       setContent(newContent)
     }
 
