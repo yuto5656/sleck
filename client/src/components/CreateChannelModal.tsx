@@ -73,7 +73,7 @@ export default function CreateChannelModal({ onClose }: CreateChannelModalProps)
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="例: 企画、general"
-                className="w-full pl-10 pr-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="w-full pl-10 pr-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 bg-white placeholder-gray-400"
                 autoFocus
               />
             </div>
@@ -90,7 +90,7 @@ export default function CreateChannelModal({ onClose }: CreateChannelModalProps)
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="このチャンネルの目的は？"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none text-gray-900 bg-white placeholder-gray-400"
               rows={3}
             />
           </div>
