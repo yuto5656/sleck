@@ -16,6 +16,7 @@ import searchRoutes from './routes/search'
 import notificationRoutes from './routes/notifications'
 import { setupSocketHandlers } from './socket'
 import { errorHandler } from './middleware/errorHandler'
+import { generalLimiter, authLimiter } from './middleware/rateLimiter'
 
 dotenv.config()
 
@@ -55,8 +56,12 @@ app.use(cors({
 app.use(express.json())
 app.use('/uploads', express.static('uploads'))
 
+// Apply general rate limiter to all API routes
+app.use('/api', generalLimiter)
+
 // Routes
-app.use('/api/v1/auth', authRoutes)
+// Auth routes have stricter rate limiting
+app.use('/api/v1/auth', authLimiter, authRoutes)
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/workspaces', workspaceRoutes)
 app.use('/api/v1/channels', channelRoutes)
