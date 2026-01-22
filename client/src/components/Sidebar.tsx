@@ -4,6 +4,7 @@ import { Hash, Lock, Plus, ChevronDown, ChevronRight, MessageSquare, UserPlus, Z
 import clsx from 'clsx'
 import { useWorkspaceStore } from '../stores/workspaceStore'
 import { useDMStore } from '../stores/dmStore'
+import { useUnreadStore } from '../stores/unreadStore'
 import { getStatusColor } from '../utils/statusColors'
 import CreateChannelModal from './CreateChannelModal'
 import InviteModal from './InviteModal'
@@ -14,6 +15,7 @@ export default function Sidebar() {
   const location = useLocation()
   const { channels, currentChannel, setCurrentChannel } = useWorkspaceStore()
   const { dms, currentDM, setCurrentDM } = useDMStore()
+  const { unreadChannels, unreadDMs, markChannelRead, markDMRead } = useUnreadStore()
 
   const [channelsExpanded, setChannelsExpanded] = useState(true)
   const [dmsExpanded, setDmsExpanded] = useState(true)
@@ -24,12 +26,14 @@ export default function Sidebar() {
   const handleChannelClick = (channel: typeof channels[0]) => {
     setCurrentChannel(channel)
     setCurrentDM(null)
+    markChannelRead(channel.id)
     navigate(`/channel/${channel.id}`)
   }
 
   const handleDMClick = (dm: typeof dms[0]) => {
     setCurrentDM(dm)
     setCurrentChannel(null)
+    markDMRead(dm.id)
     navigate(`/dm/${dm.id}`)
   }
 
@@ -56,6 +60,7 @@ export default function Sidebar() {
             <div className="mt-2 space-y-0.5">
               {channels.map((channel) => {
                 const isActive = currentChannel?.id === channel.id && location.pathname.startsWith('/channel')
+                const isUnread = unreadChannels.has(channel.id)
                 return (
                   <button
                     type="button"
@@ -65,12 +70,14 @@ export default function Sidebar() {
                       'flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-left transition-all duration-200 border',
                       isActive
                         ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white shadow-glow/20 border-primary-500/30'
-                        : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text border-transparent'
+                        : isUnread
+                          ? 'text-white bg-white/10 hover:bg-white/15 border-transparent'
+                          : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text border-transparent'
                     )}
                   >
                     <div className={clsx(
                       'w-6 h-6 rounded-lg flex items-center justify-center',
-                      isActive ? 'bg-primary-500/30' : 'bg-white/10'
+                      isActive ? 'bg-primary-500/30' : isUnread ? 'bg-primary-500/40' : 'bg-white/10'
                     )}>
                       {channel.isPrivate ? (
                         <Lock className="w-3.5 h-3.5" />
@@ -78,7 +85,10 @@ export default function Sidebar() {
                         <Hash className="w-3.5 h-3.5" />
                       )}
                     </div>
-                    <span className="truncate font-medium">{channel.name}</span>
+                    <span className={clsx('truncate', isUnread ? 'font-bold' : 'font-medium')}>{channel.name}</span>
+                    {isUnread && (
+                      <div className="ml-auto w-2 h-2 rounded-full bg-primary-400" />
+                    )}
                   </button>
                 )
               })}
@@ -132,6 +142,7 @@ export default function Sidebar() {
             <div className="mt-2 space-y-0.5">
               {dms.map((dm) => {
                 const isActive = currentDM?.id === dm.id && location.pathname.startsWith('/dm')
+                const isUnread = unreadDMs.has(dm.id)
                 return (
                   <button
                     type="button"
@@ -141,7 +152,9 @@ export default function Sidebar() {
                       'flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-left transition-all duration-200 border',
                       isActive
                         ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white shadow-glow/20 border-primary-500/30'
-                        : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text border-transparent'
+                        : isUnread
+                          ? 'text-white bg-white/10 hover:bg-white/15 border-transparent'
+                          : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text border-transparent'
                     )}
                   >
                     <div className="relative">
@@ -149,7 +162,9 @@ export default function Sidebar() {
                         'w-7 h-7 rounded-xl flex items-center justify-center text-xs font-semibold',
                         isActive
                           ? 'bg-gradient-to-br from-emerald-400 to-cyan-500'
-                          : 'bg-gradient-to-br from-gray-500 to-gray-600'
+                          : isUnread
+                            ? 'bg-gradient-to-br from-primary-400 to-accent-500'
+                            : 'bg-gradient-to-br from-gray-500 to-gray-600'
                       )}>
                         {dm.participant.displayName.charAt(0).toUpperCase()}
                       </div>
@@ -160,7 +175,10 @@ export default function Sidebar() {
                         )}
                       />
                     </div>
-                    <span className="truncate font-medium">{dm.participant.displayName}</span>
+                    <span className={clsx('truncate', isUnread ? 'font-bold' : 'font-medium')}>{dm.participant.displayName}</span>
+                    {isUnread && (
+                      <div className="ml-auto w-2 h-2 rounded-full bg-primary-400" />
+                    )}
                   </button>
                 )
               })}

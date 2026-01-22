@@ -79,6 +79,11 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
     setContent('')
     setFiles([])
 
+    // Reset textarea height
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto'
+    }
+
     if (isTyping) {
       socketService.stopTyping({ channelId, dmId })
       setIsTyping(false)
@@ -139,6 +144,11 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
     const value = e.target.value
     setContent(value)
     handleTyping()
+
+    // Auto-resize textarea
+    const textarea = e.target
+    textarea.style.height = 'auto'
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`
 
     const cursorPos = e.target.selectionStart || 0
     const textBeforeCursor = value.slice(0, cursorPos)
