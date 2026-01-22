@@ -11,8 +11,10 @@ import { getErrorMessage } from '../utils/errorUtils'
 import EmojiPicker from 'emoji-picker-react'
 
 // Format message content with mention highlighting
-function formatMentions(content: string, currentUserId?: string): React.ReactNode[] {
-  const mentionRegex = /@(\S+)/g
+// Supports both @name and @<name with spaces> formats
+function formatMentions(content: string, currentUserName?: string): React.ReactNode[] {
+  // Match @<name with spaces> or @name (no spaces)
+  const mentionRegex = /@(?:<([^>]+)>|(\S+))/g
   const parts: React.ReactNode[] = []
   let lastIndex = 0
   let match
@@ -23,8 +25,10 @@ function formatMentions(content: string, currentUserId?: string): React.ReactNod
       parts.push(content.slice(lastIndex, match.index))
     }
 
-    const mentionName = match[1]
-    const isSelfMention = currentUserId && mentionName.toLowerCase() === currentUserId.toLowerCase()
+    // match[1] is name in brackets, match[2] is name without brackets
+    const mentionName = match[1] || match[2]
+    const displayText = match[1] ? match[1] : match[2]
+    const isSelfMention = currentUserName && mentionName.toLowerCase() === currentUserName.toLowerCase()
 
     parts.push(
       <span
@@ -36,7 +40,7 @@ function formatMentions(content: string, currentUserId?: string): React.ReactNod
             : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
         )}
       >
-        @{mentionName}
+        @{displayText}
       </span>
     )
 

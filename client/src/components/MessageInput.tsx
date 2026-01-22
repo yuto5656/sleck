@@ -142,7 +142,8 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
 
     const cursorPos = e.target.selectionStart || 0
     const textBeforeCursor = value.slice(0, cursorPos)
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
+    // Match @ followed by any non-space characters (supports Japanese, alphanumeric, etc.)
+    const mentionMatch = textBeforeCursor.match(/@([^\s]*)$/)
 
     if (mentionMatch) {
       setShowMentionList(true)
@@ -158,10 +159,15 @@ export default function MessageInput({ channelId, dmId, placeholder = 'メッセ
     const textBeforeCursor = content.slice(0, cursorPos)
     const textAfterCursor = content.slice(cursorPos)
 
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
+    // Match @ followed by any non-space characters
+    const mentionMatch = textBeforeCursor.match(/@([^\s]*)$/)
     if (mentionMatch) {
       const beforeMention = textBeforeCursor.slice(0, mentionMatch.index)
-      const newContent = `${beforeMention}@${member.displayName} ${textAfterCursor}`
+      // Use display name without spaces for mention, or wrap in angle brackets if contains spaces
+      const mentionName = member.displayName.includes(' ')
+        ? `<${member.displayName}>`
+        : member.displayName
+      const newContent = `${beforeMention}@${mentionName} ${textAfterCursor}`
       setContent(newContent)
     }
 
