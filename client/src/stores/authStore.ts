@@ -14,6 +14,7 @@ interface AuthState {
   register: (email: string, password: string, displayName: string) => Promise<void>
   logout: () => Promise<void>
   loadUser: () => Promise<void>
+  setUser: (user: User) => void
   updateProfile: (data: { displayName?: string; statusMessage?: string }) => Promise<void>
   updateStatus: (status: 'online' | 'away' | 'dnd' | 'offline') => Promise<void>
   clearError: () => void
@@ -101,6 +102,10 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('refreshToken')
           set({ user: null, isAuthenticated: false, isLoading: false })
         }
+      },
+
+      setUser: (user: User) => {
+        set({ user })
       },
 
       updateProfile: async (data) => {
