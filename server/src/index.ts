@@ -43,7 +43,9 @@ const io = new Server(httpServer, {
   pingTimeout: 120000,  // Wait 2 minutes before considering connection dead
 })
 
-export const prisma = new PrismaClient()
+export const prisma = new PrismaClient({
+  log: ['error'],  // Only log errors, not queries
+})
 
 // Middleware
 app.use(cors({

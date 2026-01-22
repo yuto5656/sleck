@@ -19,9 +19,12 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-  console.error('Error:', err)
-
   if (err instanceof AppError) {
+    // Only log server errors (5xx), not client errors (4xx)
+    if (err.statusCode >= 500) {
+      console.error('Error:', err)
+    }
+
     return res.status(err.statusCode).json({
       error: {
         code: err.code,
@@ -30,6 +33,9 @@ export const errorHandler = (
       },
     })
   }
+
+  // Log unexpected errors
+  console.error('Error:', err)
 
   return res.status(500).json({
     error: {
