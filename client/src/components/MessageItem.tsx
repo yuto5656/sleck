@@ -23,11 +23,22 @@ interface MessageItemProps {
 
 // Custom comparison function for React.memo
 function arePropsEqual(prevProps: MessageItemProps, nextProps: MessageItemProps) {
+  // Deep compare reactions for optimistic updates
+  const reactionsEqual =
+    prevProps.message.reactions.length === nextProps.message.reactions.length &&
+    prevProps.message.reactions.every((prevR, i) => {
+      const nextR = nextProps.message.reactions[i]
+      return nextR &&
+        prevR.emoji === nextR.emoji &&
+        prevR.count === nextR.count &&
+        prevR.users.length === nextR.users.length
+    })
+
   return (
     prevProps.message.id === nextProps.message.id &&
     prevProps.message.content === nextProps.message.content &&
     prevProps.message.isEdited === nextProps.message.isEdited &&
-    prevProps.message.reactions.length === nextProps.message.reactions.length &&
+    reactionsEqual &&
     prevProps.message.threadCount === nextProps.message.threadCount &&
     prevProps.showHeader === nextProps.showHeader &&
     prevProps.isOwn === nextProps.isOwn
@@ -59,19 +70,21 @@ const MessageItem = memo(function MessageItem({ message, showHeader, isOwn, onOp
   const [editContent, setEditContent] = useState(message.content)
 
   const handleReactionClick = (emoji: string) => {
+    if (!user) return
     const hasReacted = message.reactions.find(
-      (r) => r.emoji === emoji && r.users.includes(user?.id || '')
+      (r) => r.emoji === emoji && r.users.includes(user.id)
     )
 
     if (hasReacted) {
-      removeReaction(message.id, emoji)
+      removeReaction(message.id, emoji, user.id)
     } else {
-      addReaction(message.id, emoji)
+      addReaction(message.id, emoji, user.id)
     }
   }
 
   const handleEmojiSelect = (emojiData: { emoji: string }) => {
-    addReaction(message.id, emojiData.emoji)
+    if (!user) return
+    addReaction(message.id, emojiData.emoji, user.id)
     setShowEmojiPicker(false)
   }
 

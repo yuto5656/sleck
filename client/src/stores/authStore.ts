@@ -36,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
 
           localStorage.setItem('accessToken', accessToken)
           localStorage.setItem('refreshToken', refreshToken)
+          localStorage.setItem('currentUserId', user.id)
 
           socketService.connect(accessToken)
 
@@ -58,6 +59,7 @@ export const useAuthStore = create<AuthState>()(
 
           localStorage.setItem('accessToken', accessToken)
           localStorage.setItem('refreshToken', refreshToken)
+          localStorage.setItem('currentUserId', user.id)
 
           socketService.connect(accessToken)
 
@@ -80,6 +82,7 @@ export const useAuthStore = create<AuthState>()(
         } finally {
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
+          localStorage.removeItem('currentUserId')
           socketService.disconnect()
           set({ user: null, isAuthenticated: false })
         }
@@ -95,11 +98,13 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true })
         try {
           const response = await userApi.getMe()
+          localStorage.setItem('currentUserId', response.data.id)
           socketService.connect(token)
           set({ user: response.data, isAuthenticated: true, isLoading: false })
         } catch {
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
+          localStorage.removeItem('currentUserId')
           set({ user: null, isAuthenticated: false, isLoading: false })
         }
       },

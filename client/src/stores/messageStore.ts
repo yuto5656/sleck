@@ -21,8 +21,8 @@ interface MessageState {
   sendMessage: (channelId: string, content: string, user: UserInfo, parentId?: string) => Promise<void>
   editMessage: (messageId: string, content: string) => Promise<void>
   deleteMessage: (messageId: string) => Promise<void>
-  addReaction: (messageId: string, emoji: string) => Promise<void>
-  removeReaction: (messageId: string, emoji: string) => Promise<void>
+  addReaction: (messageId: string, emoji: string, userId: string) => Promise<void>
+  removeReaction: (messageId: string, emoji: string, userId: string) => Promise<void>
 
   // Real-time updates
   addMessage: (channelId: string, message: Message) => void
@@ -171,21 +171,31 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     }
   },
 
-  addReaction: async (messageId, emoji) => {
+  addReaction: async (messageId, emoji, userId) => {
+    // Optimistic update - update UI immediately
+    get().updateReaction(messageId, emoji, userId, 'add')
+
     try {
       await messageApi.addReaction(messageId, emoji)
-      // Reaction will be updated via socket event
+      // Server will send socket event, but we've already updated
     } catch (error: unknown) {
+      // Rollback on error
+      get().updateReaction(messageId, emoji, userId, 'remove')
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       set({ error: err.response?.data?.error?.message || 'Failed to add reaction' })
     }
   },
 
-  removeReaction: async (messageId, emoji) => {
+  removeReaction: async (messageId, emoji, userId) => {
+    // Optimistic update - update UI immediately
+    get().updateReaction(messageId, emoji, userId, 'remove')
+
     try {
       await messageApi.removeReaction(messageId, emoji)
-      // Reaction will be updated via socket event
+      // Server will send socket event, but we've already updated
     } catch (error: unknown) {
+      // Rollback on error
+      get().updateReaction(messageId, emoji, userId, 'add')
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       set({ error: err.response?.data?.error?.message || 'Failed to remove reaction' })
     }
@@ -310,10 +320,18 @@ socketService.onMessageDelete((data) => {
   useMessageStore.getState().removeMessage(data.id)
 })
 
+// Socket listeners for reactions from OTHER users only
+// Our own reactions are handled optimistically, so we skip them here to avoid double-updating
 socketService.onReactionAdd((data) => {
-  useMessageStore.getState().updateReaction(data.messageId, data.emoji, data.userId, 'add')
+  const currentUserId = localStorage.getItem('currentUserId')
+  if (data.userId !== currentUserId) {
+    useMessageStore.getState().updateReaction(data.messageId, data.emoji, data.userId, 'add')
+  }
 })
 
 socketService.onReactionRemove((data) => {
-  useMessageStore.getState().updateReaction(data.messageId, data.emoji, data.userId, 'remove')
+  const currentUserId = localStorage.getItem('currentUserId')
+  if (data.userId !== currentUserId) {
+    useMessageStore.getState().updateReaction(data.messageId, data.emoji, data.userId, 'remove')
+  }
 })
