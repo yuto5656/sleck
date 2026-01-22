@@ -62,10 +62,10 @@ export default function Sidebar() {
                     key={channel.id}
                     onClick={() => handleChannelClick(channel)}
                     className={clsx(
-                      'flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-left transition-all duration-200',
+                      'flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-left transition-all duration-200 border',
                       isActive
-                        ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white shadow-glow/20 border border-primary-500/30'
-                        : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text'
+                        ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white shadow-glow/20 border-primary-500/30'
+                        : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text border-transparent'
                     )}
                   >
                     <div className={clsx(
@@ -138,10 +138,10 @@ export default function Sidebar() {
                     key={dm.id}
                     onClick={() => handleDMClick(dm)}
                     className={clsx(
-                      'flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-left transition-all duration-200',
+                      'flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-left transition-all duration-200 border',
                       isActive
-                        ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white shadow-glow/20 border border-primary-500/30'
-                        : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text'
+                        ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white shadow-glow/20 border-primary-500/30'
+                        : 'text-sidebar-text-muted hover:bg-white/5 hover:text-sidebar-text border-transparent'
                     )}
                   >
                     <div className="relative">
