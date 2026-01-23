@@ -25,6 +25,7 @@ interface DMState {
   addMessage: (dmId: string, message: DMMessage) => void
   updateMessage: (message: DMMessage) => void
   removeMessage: (messageId: string, dmId: string) => void
+  updateUserStatus: (userId: string, status: string) => void
 
   clearError: () => void
 }
@@ -209,6 +210,32 @@ export const useDMStore = create<DMState>((set, get) => ({
     }
   },
 
+  updateUserStatus: (userId, status) => {
+    set((state) => ({
+      dms: state.dms.map((dm) =>
+        dm.participant.id === userId
+          ? {
+              ...dm,
+              participant: {
+                ...dm.participant,
+                status,
+              },
+            }
+          : dm
+      ),
+      currentDM:
+        state.currentDM?.participant.id === userId
+          ? {
+              ...state.currentDM,
+              participant: {
+                ...state.currentDM.participant,
+                status,
+              },
+            }
+          : state.currentDM,
+    }))
+  },
+
   clearError: () => set({ error: null }),
 }))
 
@@ -223,4 +250,17 @@ socketService.onDMUpdate((message) => {
 
 socketService.onDMDelete((data) => {
   useDMStore.getState().removeMessage(data.id, data.dmId)
+})
+
+// Listen for user status changes
+socketService.onUserStatus((data) => {
+  useDMStore.getState().updateUserStatus(data.userId, data.status)
+})
+
+socketService.onUserOnline((data) => {
+  useDMStore.getState().updateUserStatus(data.userId, 'online')
+})
+
+socketService.onUserOffline((data) => {
+  useDMStore.getState().updateUserStatus(data.userId, 'offline')
 })

@@ -146,3 +146,11 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 )
+
+// Listen for own status updates from socket
+socketService.onUserStatus((data) => {
+  const state = useAuthStore.getState()
+  if (state.user?.id === data.userId) {
+    useAuthStore.setState({ user: { ...state.user, status: data.status } })
+  }
+})
