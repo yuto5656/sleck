@@ -151,6 +151,7 @@ export const useAuthStore = create<AuthState>()(
 socketService.onUserStatus((data) => {
   const state = useAuthStore.getState()
   if (state.user?.id === data.userId) {
-    useAuthStore.setState({ user: { ...state.user, status: data.status } })
+    const typedStatus = data.status as 'online' | 'away' | 'dnd' | 'offline'
+    useAuthStore.setState({ user: { ...state.user, status: typedStatus } })
   }
 })

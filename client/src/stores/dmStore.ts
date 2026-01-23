@@ -211,6 +211,7 @@ export const useDMStore = create<DMState>((set, get) => ({
   },
 
   updateUserStatus: (userId, status) => {
+    const typedStatus = status as 'online' | 'away' | 'dnd' | 'offline'
     set((state) => ({
       dms: state.dms.map((dm) =>
         dm.participant.id === userId
@@ -218,7 +219,7 @@ export const useDMStore = create<DMState>((set, get) => ({
               ...dm,
               participant: {
                 ...dm.participant,
-                status,
+                status: typedStatus,
               },
             }
           : dm
@@ -229,7 +230,7 @@ export const useDMStore = create<DMState>((set, get) => ({
               ...state.currentDM,
               participant: {
                 ...state.currentDM.participant,
-                status,
+                status: typedStatus,
               },
             }
           : state.currentDM,
